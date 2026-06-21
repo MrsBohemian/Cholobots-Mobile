@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -18,74 +19,68 @@
     }
 
     .top-bar {
-      position: sticky;
-      top: 0;
       background: #000;
-      padding: 4px 0 8px;
-      z-index: 10;
-      border-bottom: 1px solid #222;
+      padding: 2px 0 4px;
+      border-bottom: 1px solid #111;
     }
 
     .back-link {
       color: #18a8ff;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
+      opacity: 0.65;
     }
 
     .schedule-section {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       border: 1px solid #222;
       border-radius: 8px;
       overflow: hidden;
       background: #050505;
     }
-    
-    .section-title {
-      display: none;
-    }
-    
+
     .heaven {
       color: #18a8ff;
     }
-    
+
     .daniel {
       color: #9b6bff;
     }
-    
+
     .schedule-row {
       display: flex;
       align-items: stretch;
     }
-    
+
     .person-rail {
-      width: 28px;
-      min-width: 28px;
+      width: 24px;
+      min-width: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
       letter-spacing: 2px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       background: #080808;
       border-right: 1px solid #222;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
     }
-    
+
     .scroll-wrap {
       flex: 1;
       overflow-x: auto;
       overflow-y: hidden;
       padding: 2px;
     }
-    
+
     .schedule-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(145px, 1fr));
       gap: 4px;
       min-width: 600px;
     }
-    
+
     .day-card {
       border: 1px solid #222;
       border-radius: 6px;
@@ -93,27 +88,27 @@
       padding: 6px;
       min-height: 145px;
     }
-    
+
     .day-card h2 {
       margin: 0 0 4px;
       font-size: 0.9rem;
       border-bottom: 1px solid #222;
       padding-bottom: 3px;
     }
-    
+
     .heaven-title {
       color: #18a8ff;
     }
-    
+
     .daniel-title {
       color: #9b6bff;
     }
-    
+
     ul {
       padding-left: 14px;
       margin: 0;
     }
-    
+
     li {
       margin-bottom: 4px;
       line-height: 1.15;
@@ -121,121 +116,114 @@
     }
 
     @media (orientation: landscape) {
-   
-      .schedule-section {
-        margin-bottom: 18px;
-      }
-
       .day-card {
         min-height: 160px;
       }
     }
   </style>
+
 </head>
 
 <body>
   <div class="page">
-   <div class="top-bar">
-    <a class="back-link" href="index.html">←</a>
-   </div>
+    <div class="top-bar">
+      <a class="back-link" href="index.html">←</a>
+    </div>
 
-    <section class="schedule-section">
-      <div class="schedule-row">
-        <div class="person-rail heaven">HEAVEN</div>
-        <div class="scroll-wrap">
-          ...
+```
+<section class="schedule-section">
+  <div class="schedule-row">
+    <div class="person-rail heaven">HEAVEN</div>
+
+    <div class="scroll-wrap">
+      <div class="schedule-grid">
+        <div class="day-card">
+          <h2 class="heaven-title">Mon</h2>
+          <ul>
+            <li>Balance sheet</li>
+            <li>Lead review</li>
+            <li>Calls / estimates</li>
+          </ul>
+        </div>
+
+        <div class="day-card">
+          <h2 class="heaven-title">Tue</h2>
+          <ul>
+            <li>GC / deconstruction</li>
+            <li>Field follow-up</li>
+            <li>Kids outing</li>
+          </ul>
+        </div>
+
+        <div class="day-card">
+          <h2 class="heaven-title">Wed</h2>
+          <ul>
+            <li>Cholobots dev</li>
+            <li>Library / work block</li>
+            <li>Hemisfair</li>
+          </ul>
+        </div>
+
+        <div class="day-card">
+          <h2 class="heaven-title">Thu</h2>
+          <ul>
+            <li>GC / deconstruction</li>
+            <li>Field follow-up</li>
+            <li>Kids outing</li>
+          </ul>
         </div>
       </div>
+    </div>
+  </div>
+</section>
 
-      <div class="scroll-wrap">
-        <div class="schedule-grid">
-          <div class="day-card">
-            <h2 class="heaven-title">Mon</h2>
-            <ul>
-              <li>Balance sheet</li>
-              <li>Lead review</li>
-              <li>Calls / estimates</li>
-            </ul>
-          </div>
+<section class="schedule-section">
+  <div class="schedule-row">
+    <div class="person-rail daniel">DANIEL</div>
 
-          <div class="day-card">
-            <h2 class="heaven-title">Tue</h2>
-            <ul>
-              <li>GC / deconstruction</li>
-              <li>Field follow-up</li>
-              <li>Kids outing</li>
-            </ul>
-          </div>
+    <div class="scroll-wrap">
+      <div class="schedule-grid">
+        <div class="day-card">
+          <h2 class="daniel-title">Mon</h2>
+          <ul>
+            <li>Handley Man ops</li>
+            <li>Materials / estimates</li>
+            <li>Customer communication</li>
+          </ul>
+        </div>
 
-          <div class="day-card">
-            <h2 class="heaven-title">Wed</h2>
-            <ul>
-              <li>Cholobots dev</li>
-              <li>Library / work block</li>
-              <li>Hemisfair</li>
-            </ul>
-          </div>
+        <div class="day-card">
+          <h2 class="daniel-title">Tue</h2>
+          <ul>
+            <li>Field work</li>
+            <li>Jobsite</li>
+            <li>Wrap / photos</li>
+          </ul>
+        </div>
 
-          <div class="day-card">
-            <h2 class="heaven-title">Thu</h2>
-            <ul>
-              <li>GC / deconstruction</li>
-              <li>Field follow-up</li>
-              <li>Kids outing</li>
-            </ul>
-          </div>
+        <div class="day-card">
+          <h2 class="daniel-title">Wed</h2>
+          <ul>
+            <li>Customer calls</li>
+            <li>Chismebot queue</li>
+            <li>Dev support</li>
+          </ul>
+        </div>
+
+        <div class="day-card">
+          <h2 class="daniel-title">Thu</h2>
+          <ul>
+            <li>Field work</li>
+            <li>Jobsite</li>
+            <li>Wrap / photos</li>
+          </ul>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
+```
 
-    <section class="schedule-section">
-      <div class="schedule-row">
-        <div class="person-rail daniel">DANIEL</div>
-        <div class="scroll-wrap">
-          ...
-        </div>
-      </div>
-
-      <div class="scroll-wrap">
-        <div class="schedule-grid">
-          <div class="day-card">
-            <h2 class="daniel-title">Mon</h2>
-            <ul>
-              <li>Handley Man ops</li>
-              <li>Materials / estimates</li>
-              <li>Customer communication</li>
-            </ul>
-          </div>
-
-          <div class="day-card">
-            <h2 class="daniel-title">Tue</h2>
-            <ul>
-              <li>Field work</li>
-              <li>Jobsite</li>
-              <li>Wrap / photos</li>
-            </ul>
-          </div>
-
-          <div class="day-card">
-            <h2 class="daniel-title">Wed</h2>
-            <ul>
-              <li>Customer calls</li>
-              <li>Chismebot queue</li>
-              <li>Dev support</li>
-            </ul>
-          </div>
-
-          <div class="day-card">
-            <h2 class="daniel-title">Thu</h2>
-            <ul>
-              <li>Field work</li>
-              <li>Jobsite</li>
-              <li>Wrap / photos</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </body>
 </html>
