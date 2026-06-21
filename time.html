@@ -45,7 +45,11 @@
       margin-bottom: 10px;
     }
 
-    .calendar-section {
+    .rotate-warning {
+      display: none;
+    }
+
+    .schedule-section {
       margin-bottom: 28px;
       border: 1px solid #333;
       border-radius: 12px;
@@ -53,7 +57,7 @@
       background: #050505;
     }
 
-    .calendar-title {
+    .section-title {
       padding: 10px 12px;
       font-weight: bold;
       letter-spacing: 1px;
@@ -69,52 +73,51 @@
       color: #9b6bff;
     }
 
-    .schedule-grid {
-      min-width: 760px;
-      display: grid;
-      grid-template-columns: 70px repeat(7, 1fr);
-      font-size: 0.75rem;
-    }
-
     .scroll-wrap {
       overflow-x: auto;
       overflow-y: hidden;
+      padding: 10px;
     }
 
-    .cell {
-      border-right: 1px solid #222;
-      border-bottom: 1px solid #222;
-      min-height: 42px;
-      padding: 6px;
-      box-sizing: border-box;
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 10px;
+      min-width: 720px;
     }
 
-    .day-header,
-    .time-label {
-      background: #111;
-      font-weight: bold;
-      color: #ddd;
+    .day-card {
+      border: 1px solid #333;
+      border-radius: 10px;
+      background: #080808;
+      padding: 10px;
+      min-height: 220px;
     }
 
-    .time-label {
-      color: #888;
-      text-align: right;
+    .day-card h2 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
     }
 
-    .event {
-      background: #1a1a1a;
-      border-left: 4px solid #18a8ff;
-      border-radius: 6px;
-      padding: 5px;
-      line-height: 1.2;
+    .heaven-title {
+      color: #18a8ff;
     }
 
-    .event.purple {
-      border-left-color: #9b6bff;
+    .daniel-title {
+      color: #9b6bff;
     }
 
-    .event.green {
-      border-left-color: #7ed957;
+    ul {
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 8px;
+      line-height: 1.25;
+      font-size: 0.85rem;
     }
 
     @media (orientation: portrait) {
@@ -128,21 +131,16 @@
     }
 
     @media (orientation: landscape) {
-      .rotate-warning {
-        display: none;
-      }
-
       h1 {
         font-size: 1rem;
       }
 
-      .calendar-section {
+      .schedule-section {
         margin-bottom: 18px;
       }
 
-      .cell {
-        min-height: 36px;
-        padding: 4px;
+      .day-card {
+        min-height: 160px;
       }
     }
   </style>
@@ -153,94 +151,94 @@
     <div class="top-bar">
       <a class="back-link" href="index.html">← Back</a>
       <h1>Time Management</h1>
-      <div class="hint">mschedule landscape view</div>
+      <div class="hint">!mschedule four-day view</div>
       <div class="rotate-warning">Rotate your phone sideways for best view.</div>
     </div>
 
-    <section class="calendar-section">
-      <div class="calendar-title heaven">HEAVEN SCHEDULE</div>
+    <section class="schedule-section">
+      <div class="section-title heaven">HEAVEN SCHEDULE</div>
 
       <div class="scroll-wrap">
         <div class="schedule-grid">
-          <div class="cell day-header">Time</div>
-          <div class="cell day-header">Mon</div>
-          <div class="cell day-header">Tue</div>
-          <div class="cell day-header">Wed</div>
-          <div class="cell day-header">Thu</div>
-          <div class="cell day-header">Fri</div>
-          <div class="cell day-header">Sat</div>
-          <div class="cell day-header">Sun</div>
+          <div class="day-card">
+            <h2 class="heaven-title">Mon</h2>
+            <ul>
+              <li>Balance sheet</li>
+              <li>Lead review</li>
+              <li>Calls / estimates</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Morning</div>
-          <div class="cell"><div class="event">Balance sheet<br>lead review</div></div>
-          <div class="cell">GC / decon</div>
-          <div class="cell"><div class="event green">Cholobots dev</div></div>
-          <div class="cell">GC / decon</div>
-          <div class="cell"><div class="event green">Cholobots dev</div></div>
-          <div class="cell">House / garage</div>
-          <div class="cell">Church</div>
+          <div class="day-card">
+            <h2 class="heaven-title">Tue</h2>
+            <ul>
+              <li>GC / deconstruction</li>
+              <li>Field follow-up</li>
+              <li>Kids outing</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Midday</div>
-          <div class="cell">Admin</div>
-          <div class="cell">Field follow-up</div>
-          <div class="cell">Library / work block</div>
-          <div class="cell">Field follow-up</div>
-          <div class="cell">Build / test</div>
-          <div class="cell">Family rhythm</div>
-          <div class="cell">Lunch</div>
+          <div class="day-card">
+            <h2 class="heaven-title">Wed</h2>
+            <ul>
+              <li>Cholobots dev</li>
+              <li>Library / work block</li>
+              <li>Hemisfair</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Afternoon</div>
-          <div class="cell">Calls / estimates</div>
-          <div class="cell">Kids outing</div>
-          <div class="cell">Hemisfair</div>
-          <div class="cell">Kids outing</div>
-          <div class="cell">Swim</div>
-          <div class="cell">Errands</div>
-          <div class="cell">Dinner rotation</div>
+          <div class="day-card">
+            <h2 class="heaven-title">Thu</h2>
+            <ul>
+              <li>GC / deconstruction</li>
+              <li>Field follow-up</li>
+              <li>Kids outing</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="calendar-section">
-      <div class="calendar-title daniel">DANIEL SCHEDULE</div>
+    <section class="schedule-section">
+      <div class="section-title daniel">DANIEL SCHEDULE</div>
 
       <div class="scroll-wrap">
         <div class="schedule-grid">
-          <div class="cell day-header">Time</div>
-          <div class="cell day-header">Mon</div>
-          <div class="cell day-header">Tue</div>
-          <div class="cell day-header">Wed</div>
-          <div class="cell day-header">Thu</div>
-          <div class="cell day-header">Fri</div>
-          <div class="cell day-header">Sat</div>
-          <div class="cell day-header">Sun</div>
+          <div class="day-card">
+            <h2 class="daniel-title">Mon</h2>
+            <ul>
+              <li>Handley Man ops</li>
+              <li>Materials / estimates</li>
+              <li>Customer communication</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Morning</div>
-          <div class="cell"><div class="event purple">Handley Man ops</div></div>
-          <div class="cell">Field work</div>
-          <div class="cell"><div class="event purple">Customer calls</div></div>
-          <div class="cell">Field work</div>
-          <div class="cell"><div class="event purple">Customer follow-up</div></div>
-          <div class="cell">Catch-up</div>
-          <div class="cell">Church</div>
+          <div class="day-card">
+            <h2 class="daniel-title">Tue</h2>
+            <ul>
+              <li>Field work</li>
+              <li>Jobsite</li>
+              <li>Wrap / photos</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Midday</div>
-          <div class="cell">Materials / estimates</div>
-          <div class="cell">Jobsite</div>
-          <div class="cell">Chismebot queue</div>
-          <div class="cell">Jobsite</div>
-          <div class="cell">Chismebot queue</div>
-          <div class="cell">Family rhythm</div>
-          <div class="cell">Rest</div>
+          <div class="day-card">
+            <h2 class="daniel-title">Wed</h2>
+            <ul>
+              <li>Customer calls</li>
+              <li>Chismebot queue</li>
+              <li>Dev support</li>
+            </ul>
+          </div>
 
-          <div class="cell time-label">Afternoon</div>
-          <div class="cell">Customer communication</div>
-          <div class="cell">Wrap / photos</div>
-          <div class="cell">Dev support</div>
-          <div class="cell">Wrap / photos</div>
-          <div class="cell">Weekly closeout</div>
-          <div class="cell">Errands</div>
-          <div class="cell">Dinner rotation</div>
+          <div class="day-card">
+            <h2 class="daniel-title">Thu</h2>
+            <ul>
+              <li>Field work</li>
+              <li>Jobsite</li>
+              <li>Wrap / photos</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
