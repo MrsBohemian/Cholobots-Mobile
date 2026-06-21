@@ -14,7 +14,7 @@
     }
 
     .page {
-      padding: 12px;
+      padding: 2px;
     }
 
     .top-bar {
@@ -33,74 +33,91 @@
     }
 
     .schedule-section {
-      margin-bottom: 28px;
-      border: 1px solid #333;
-      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #222;
+      border-radius: 8px;
       overflow: hidden;
       background: #050505;
     }
-
+    
     .section-title {
-      padding: 10px 12px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      border-bottom: 1px solid #333;
-      background: #111;
+      display: none;
     }
-
+    
     .heaven {
       color: #18a8ff;
     }
-
+    
     .daniel {
       color: #9b6bff;
     }
-
+    
+    .schedule-row {
+      display: flex;
+      align-items: stretch;
+    }
+    
+    .person-rail {
+      width: 28px;
+      min-width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      letter-spacing: 2px;
+      font-size: 0.75rem;
+      background: #080808;
+      border-right: 1px solid #222;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+    
     .scroll-wrap {
+      flex: 1;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 10px;
+      padding: 2px;
     }
-
+    
     .schedule-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(160px, 1fr));
-      gap: 10px;
-      min-width: 720px;
+      grid-template-columns: repeat(4, minmax(145px, 1fr));
+      gap: 4px;
+      min-width: 600px;
     }
-
+    
     .day-card {
-      border: 1px solid #333;
-      border-radius: 10px;
-      background: #080808;
-      padding: 10px;
-      min-height: 220px;
+      border: 1px solid #222;
+      border-radius: 6px;
+      background: #050505;
+      padding: 6px;
+      min-height: 145px;
     }
-
+    
     .day-card h2 {
-      margin: 0 0 8px;
-      font-size: 1rem;
-      border-bottom: 1px solid #333;
-      padding-bottom: 6px;
+      margin: 0 0 4px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #222;
+      padding-bottom: 3px;
     }
-
+    
     .heaven-title {
       color: #18a8ff;
     }
-
+    
     .daniel-title {
       color: #9b6bff;
     }
-
+    
     ul {
-      padding-left: 18px;
+      padding-left: 14px;
       margin: 0;
     }
-
+    
     li {
-      margin-bottom: 8px;
-      line-height: 1.25;
-      font-size: 0.85rem;
+      margin-bottom: 4px;
+      line-height: 1.15;
+      font-size: 0.78rem;
     }
 
     @media (orientation: landscape) {
@@ -123,7 +140,12 @@
    </div>
 
     <section class="schedule-section">
-      <div class="section-title heaven">HEAVEN SCHEDULE</div>
+      <div class="schedule-row">
+        <div class="person-rail heaven">HEAVEN</div>
+        <div class="scroll-wrap">
+          ...
+        </div>
+      </div>
 
       <div class="scroll-wrap">
         <div class="schedule-grid">
@@ -167,7 +189,12 @@
     </section>
 
     <section class="schedule-section">
-      <div class="section-title daniel">DANIEL SCHEDULE</div>
+      <div class="schedule-row">
+        <div class="person-rail daniel">DANIEL</div>
+        <div class="scroll-wrap">
+          ...
+        </div>
+      </div>
 
       <div class="scroll-wrap">
         <div class="schedule-grid">
