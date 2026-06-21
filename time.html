@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Time Management</title>
+  <title>Time</title>
 
   <style>
     body {
       margin: 0;
       background: #000;
-      color: white;
+      color: #eee;
       font-family: Arial, sans-serif;
     }
 
@@ -18,24 +17,47 @@
       padding: 2px;
     }
 
-    .top-bar {
-      background: #000;
-      padding: 2px 0 4px;
-      border-bottom: 1px solid #111;
-    }
-
     .back-link {
       color: #18a8ff;
       text-decoration: none;
-      font-size: 0.8rem;
-      opacity: 0.65;
+      font-size: 0.75rem;
+      opacity: 0.6;
+      position: fixed;
+      top: 2px;
+      left: 4px;
+      z-index: 10;
     }
 
-    .schedule-section {
-      margin-bottom: 10px;
-      border: 1px solid #222;
-      border-radius: 8px;
+    .planner {
+      margin-top: 18px;
+      border-top: 1px solid #444;
+      border-left: 1px solid #444;
+      font-size: 0.72rem;
+    }
+
+    .planner-row {
+      display: grid;
+      grid-template-columns: 22px repeat(4, 1fr);
+    }
+
+    .cell {
+      min-height: 92px;
+      border-right: 1px solid #444;
+      border-bottom: 1px solid #444;
+      padding: 4px;
+      box-sizing: border-box;
       overflow: hidden;
+    }
+
+    .person {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      letter-spacing: 1px;
+      padding: 0;
       background: #050505;
     }
 
@@ -47,98 +69,46 @@
       color: #9b6bff;
     }
 
-    .schedule-row {
-      display: flex;
-      align-items: stretch;
-    }
-
-    .person-rail {
-      width: 24px;
-      min-width: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .day {
       font-weight: bold;
-      letter-spacing: 2px;
-      font-size: 0.7rem;
-      background: #080808;
-      border-right: 1px solid #222;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-    }
-
-    .scroll-wrap {
-      flex: 1;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 2px;
-    }
-
-    .schedule-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(145px, 1fr));
-      gap: 4px;
-      min-width: 600px;
-    }
-
-    .day-card {
-      border: 1px solid #222;
-      border-radius: 6px;
-      background: #050505;
-      padding: 6px;
-      min-height: 145px;
-    }
-
-    .day-card h2 {
-      margin: 0 0 4px;
-      font-size: 0.9rem;
+      font-size: 0.78rem;
+      margin-bottom: 3px;
       border-bottom: 1px solid #222;
-      padding-bottom: 3px;
-    }
-
-    .heaven-title {
-      color: #18a8ff;
-    }
-
-    .daniel-title {
-      color: #9b6bff;
+      padding-bottom: 2px;
     }
 
     ul {
-      padding-left: 14px;
       margin: 0;
+      padding-left: 12px;
     }
 
     li {
-      margin-bottom: 4px;
-      line-height: 1.15;
-      font-size: 0.78rem;
+      margin-bottom: 3px;
+      line-height: 1.1;
     }
 
     @media (orientation: landscape) {
-      .day-card {
-        min-height: 160px;
+      .cell {
+        min-height: 120px;
+      }
+
+      .planner {
+        font-size: 0.75rem;
       }
     }
   </style>
-
 </head>
 
 <body>
-  <div class="page">
-    <div class="top-bar">
-      <a class="back-link" href="index.html">←</a>
-    </div>
+  <a class="back-link" href="index.html">←</a>
 
-```
-<section class="schedule-section">
-  <div class="schedule-row">
-    <div class="person-rail heaven">HEAVEN</div>
+  <main class="page">
+    <section class="planner">
+      <div class="planner-row">
+        <div class="cell person heaven">HEAVEN</div>
 
-    <div class="scroll-wrap">
-      <div class="schedule-grid">
-        <div class="day-card">
-          <h2 class="heaven-title">Mon</h2>
+        <div class="cell">
+          <div class="day heaven">Mon</div>
           <ul>
             <li>Balance sheet</li>
             <li>Lead review</li>
@@ -146,8 +116,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="heaven-title">Tue</h2>
+        <div class="cell">
+          <div class="day heaven">Tue</div>
           <ul>
             <li>GC / deconstruction</li>
             <li>Field follow-up</li>
@@ -155,8 +125,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="heaven-title">Wed</h2>
+        <div class="cell">
+          <div class="day heaven">Wed</div>
           <ul>
             <li>Cholobots dev</li>
             <li>Library / work block</li>
@@ -164,8 +134,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="heaven-title">Thu</h2>
+        <div class="cell">
+          <div class="day heaven">Thu</div>
           <ul>
             <li>GC / deconstruction</li>
             <li>Field follow-up</li>
@@ -173,18 +143,12 @@
           </ul>
         </div>
       </div>
-    </div>
-  </div>
-</section>
 
-<section class="schedule-section">
-  <div class="schedule-row">
-    <div class="person-rail daniel">DANIEL</div>
+      <div class="planner-row">
+        <div class="cell person daniel">DANIEL</div>
 
-    <div class="scroll-wrap">
-      <div class="schedule-grid">
-        <div class="day-card">
-          <h2 class="daniel-title">Mon</h2>
+        <div class="cell">
+          <div class="day daniel">Mon</div>
           <ul>
             <li>Handley Man ops</li>
             <li>Materials / estimates</li>
@@ -192,8 +156,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="daniel-title">Tue</h2>
+        <div class="cell">
+          <div class="day daniel">Tue</div>
           <ul>
             <li>Field work</li>
             <li>Jobsite</li>
@@ -201,8 +165,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="daniel-title">Wed</h2>
+        <div class="cell">
+          <div class="day daniel">Wed</div>
           <ul>
             <li>Customer calls</li>
             <li>Chismebot queue</li>
@@ -210,8 +174,8 @@
           </ul>
         </div>
 
-        <div class="day-card">
-          <h2 class="daniel-title">Thu</h2>
+        <div class="cell">
+          <div class="day daniel">Thu</div>
           <ul>
             <li>Field work</li>
             <li>Jobsite</li>
@@ -219,11 +183,7 @@
           </ul>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-```
-
-  </div>
+    </section>
+  </main>
 </body>
 </html>
