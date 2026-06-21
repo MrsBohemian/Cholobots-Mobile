@@ -41,7 +41,7 @@
     }
 
     .cell {
-      min-height: 400px;
+      height: calc(100vh - 90px);
       border-right: 1px solid #444;
       border-bottom: 1px solid #444;
       padding: 4px;
@@ -71,8 +71,8 @@
 
     .day {
       font-weight: bold;
-      font-size: 0.78rem;
-      margin-bottom: 3px;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
       border-bottom: 1px solid #222;
       padding-bottom: 2px;
     }
@@ -89,7 +89,7 @@
 
     @media (orientation: landscape) {
       .cell {
-        min-height: 120px;
+        min-height: 260px;
       }
 
       .planner {
