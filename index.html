@@ -1,270 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Chismebot Customer Cards</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handley Man Cholobots</title>
+
   <style>
-    :root {
-      --bg: #000000;
-      --card: #1b1b1b;
-      --card-border: #3a3a3a;
-      --text: #eeeeee;
-      --muted: #9b9b9b;
-      --strong: #ffffff;
-      --line: #303030;
-      --button: #252525;
-      --button-border: #464646;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      overflow: hidden;
-    }
-
     body {
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-    }
-
-    .app {
-      width: 100vw;
-      height: 100dvh;
-      padding: max(6px, env(safe-area-inset-top)) 7px max(7px, env(safe-area-inset-bottom));
-      display: grid;
-      grid-template-rows: 1fr auto;
-      gap: 6px;
-      background: var(--bg);
-    }
-
-    .card-shell {
-      min-height: 0;
-      border: 1px solid var(--card-border);
-      background: var(--card);
-      overflow: hidden;
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      color: white;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
-    }
-
-    .card {
-      min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 15px 15px 18px;
-    }
-
-    .name {
-      margin: 0 0 5px;
-      color: var(--strong);
-      font-size: clamp(27px, 8vw, 38px);
-      line-height: 1.02;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .contact {
-      color: #c9c9c9;
-      font-size: clamp(13px, 3.8vw, 17px);
-      line-height: 1.28;
-      margin-bottom: 13px;
-      word-break: break-word;
-    }
-
-    .section {
-      padding-top: 10px;
-      margin-top: 10px;
-      border-top: 1px solid var(--line);
-    }
-
-    .label {
-      margin: 0 0 4px;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1;
-      letter-spacing: 0.08em;
-      text-transform: lowercase;
-      font-weight: 700;
-    }
-
-    .value {
-      margin: 0;
-      color: var(--text);
-      font-size: clamp(15px, 4.2vw, 18px);
-      line-height: 1.32;
-      font-weight: 400;
-    }
-
-    .nav {
-      height: 43px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 7px;
+      padding: 12px 16px;
     }
 
-    button {
-      height: 40px;
-      border: 1px solid var(--button-border);
-      background: var(--button);
-      color: var(--strong);
-      font-size: 15px;
-      font-weight: 700;
-      font-family: inherit;
-      border-radius: 0;
-      touch-action: manipulation;
+    .menu {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
     }
 
-    button:active { transform: translateY(1px); }
-
-    .count {
-      min-width: 62px;
+    .menu-item {
+      text-decoration: none;
+      color: white;
       text-align: center;
-      color: #d6d6d6;
-      font-size: 14px;
-      font-weight: 700;
+      display: block;
+    }
+
+    .menu-item img {
+      width: 180px;
+      max-width: 75%;
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    .menu-item span {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .blue { color: #18a8ff; }
+    .purple { color: #9b6bff; }
+    .green { color: #7ed957; }
+
+    .menu-item:active {
+      transform: scale(0.97);
     }
   </style>
 </head>
+
 <body>
-  <main class="app" aria-label="Customer communication index card viewer">
-    <section class="card-shell">
-      <article class="card" id="card" aria-live="polite"></article>
-    </section>
 
-    <nav class="nav" aria-label="Card navigation">
-      <button id="prev" type="button">← Prev</button>
-      <div class="count" id="count">1 / 1</div>
-      <button id="next" type="button">Next →</button>
-    </nav>
+  <main class="menu">
+    <a class="menu-item" href="time.html">
+      <img src="assets/time-clock.png" alt="Time Management">
+      <span class="blue">Time Management</span>
+    </a>
+
+    <a class="menu-item" href="customers.html">
+      <img src="assets/customer-phone.png" alt="Customer Communication">
+      <span class="purple">Customer Communication</span>
+    </a>
+
+    <a class="menu-item" href="money.html">
+      <img src="assets/money-scales.png" alt="Min Max Money">
+      <span class="green">Min / Max Money</span>
+    </a>
   </main>
-
-  <script>
-    const customers = [
-      {
-        name: "Michael Lawrence",
-        phone: "210-555-1234",
-        email: "michael@example.com",
-        status: "Estimate pending — bathroom refresh / shower door replacement.",
-        currentChisme: "Shower door will not close properly. Shower area is starting to look worn, calcified, and rusted. He wants the function fixed, but the appearance matters too. He likes black, gray, marble, and clean updated finishes.",
-        history: "Past customer. Hired us to redo his garage after recovering from an injury and going through a painful divorce. The garage became a personal CrossFit workout space and a place where neighbors could join him.",
-        taste: "Minimalist, masculine, art deco leaning. Very neat and clean. Notices when parts of the house are aging, depreciating, worn, or no longer visually sharp.",
-        address: "123 Main St, San Antonio, TX"
-      },
-      {
-        name: "Andy Holland / Yvette Smith",
-        phone: "210-555-2222",
-        email: "andy.yvette@example.com",
-        status: "Active projects — Gardina and Bryn Mawr.",
-        currentChisme: "Bryn Mawr panel work needs correction and power restoration. Gardina needs CPS temporary power coordination, subcontractor rough-in review, and city rough-in inspection scheduling.",
-        history: "Permit-heavy repair work across two properties. Communication often involves customer, CPS, city inspections, and subcontractors.",
-        taste: "Keep communication concrete, dated, and tied to inspection progress.",
-        address: "1211 Gardina / Bryn Mawr duplexes"
-      },
-      {
-        name: "Kate Pyle",
-        phone: "210-555-3333",
-        email: "kate@example.com",
-        status: "Scheduled work — Wednesday through Friday.",
-        currentChisme: "Daniel needs to keep job communication clean while work is underway.",
-        history: "Repeat / active customer with enough work to keep the crew busy for the week.",
-        taste: "Values responsiveness and clear schedule expectations.",
-        address: "Address needed"
-      },
-      {
-        name: "Cecilia Conlee",
-        phone: "210-555-4444",
-        email: "cecilia@example.com",
-        status: "Scheduled electrical job — Tuesday.",
-        currentChisme: "Confirm details and make sure Daniel has the job in his schedule.",
-        history: "Electrical customer.",
-        taste: "Notes needed after next contact.",
-        address: "Address needed"
-      },
-      {
-        name: "Vasque",
-        phone: "210-555-5555",
-        email: "vasque@example.com",
-        status: "Electrical work pending — panel relocation.",
-        currentChisme: "Daniel needs to coordinate with CPS and block time on his schedule for the panel relocation.",
-        history: "Customer tied to utility coordination and electrical scheduling.",
-        taste: "Keep communication focused on CPS timing and schedule certainty.",
-        address: "Address needed"
-      },
-      {
-        name: "Danny — Thrivent",
-        phone: "210-555-6666",
-        email: "danny@example.com",
-        status: "Needs Daniel follow-up.",
-        currentChisme: "One of Daniel's customer communication items.",
-        history: "More notes needed.",
-        taste: "Unknown.",
-        address: "Address needed"
-      }
-    ];
-
-    let index = 0;
-    const card = document.getElementById("card");
-    const count = document.getElementById("count");
-    const prev = document.getElementById("prev");
-    const next = document.getElementById("next");
-
-    function section(label, value) {
-      return `
-        <section class="section">
-          <p class="label">${label}</p>
-          <p class="value">${value}</p>
-        </section>
-      `;
-    }
-
-    function render() {
-      const c = customers[index];
-      card.scrollTop = 0;
-      card.innerHTML = `
-        <h1 class="name">${c.name}</h1>
-        <div class="contact">${c.phone} | ${c.email}</div>
-        ${section("status", c.status)}
-        ${section("current chisme", c.currentChisme)}
-        ${section("history", c.history)}
-        ${section("taste", c.taste)}
-        ${section("address", c.address)}
-      `;
-      count.textContent = `${index + 1} / ${customers.length}`;
-    }
-
-    function go(delta) {
-      index = (index + delta + customers.length) % customers.length;
-      render();
-    }
-
-    prev.addEventListener("click", () => go(-1));
-    next.addEventListener("click", () => go(1));
-
-    let startX = null;
-    card.addEventListener("touchstart", (e) => {
-      startX = e.changedTouches[0].clientX;
-    }, { passive: true });
-
-    card.addEventListener("touchend", (e) => {
-      if (startX === null) return;
-      const endX = e.changedTouches[0].clientX;
-      const diff = endX - startX;
-      if (Math.abs(diff) > 55) {
-        go(diff < 0 ? 1 : -1);
-      }
-      startX = null;
-    }, { passive: true });
-
-    render();
-  </script>
 </body>
 </html>
