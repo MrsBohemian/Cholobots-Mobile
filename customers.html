@@ -208,7 +208,12 @@
 
       if (error) {
         console.error("Chismebot cards load failed:", error);
-        card.innerHTML = `<div class="empty">Could not load Chismebot cards.</div>`;
+        card.innerHTML = `
+          <div class="empty">
+            Could not load Chismebot cards.<br><br>
+            ${escapeHtml(error.message)}
+          </div>
+        `;
         count.textContent = "error";
         return;
       }
