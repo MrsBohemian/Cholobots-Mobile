@@ -167,7 +167,7 @@
         ${section("last outcome", c.last_outcome)}
         ${section("next action", c.next_action)}
         ${section("address", c.address)}
-        ${section("preferred contact", c.preferred_contact)}
+        ${section("preferred contact", c.preferred_contact_method)}
       `;
 
       count.textContent = `${index + 1} / ${customers.length}`;
@@ -191,7 +191,7 @@
           email,
           address,
           status,
-          preferred_contact,
+          preferred_contact_method,
           chisme_summary,
           last_outcome,
           next_action,
