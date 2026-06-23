@@ -1,190 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Time</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Time</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: #eee;
-      font-family: Arial, sans-serif;
-    }
+<style>
+body {
+  margin: 0;
+  background: #000;
+  color: #eee;
+  font-family: Arial, sans-serif;
+}
 
-    .page {
-      padding: 2px;
-    }
+.page { padding: 2px; }
 
-    .back-link {
-      color: #18a8ff;
-      text-decoration: none;
-      font-size: 0.75rem;
-      opacity: 0.6;
-      position: fixed;
-      top: 2px;
-      left: 4px;
-      z-index: 10;
-    }
+.back-link {
+  color: #18a8ff;
+  text-decoration: none;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  position: fixed;
+  top: 2px;
+  left: 4px;
+  z-index: 10;
+}
 
-    .planner {
-      margin-top: 18px;
-      border-top: 1px solid #444;
-      border-left: 1px solid #444;
-      font-size: 0.72rem;
-    }
+.status {
+  position: fixed;
+  top: 3px;
+  right: 6px;
+  font-size: .62rem;
+  color: #777;
+  z-index: 10;
+}
 
-    .planner-row {
-      display: grid;
-      grid-template-columns: 22px repeat(4, 1fr);
-    }
+.planner {
+  margin-top: 18px;
+  border-top: 1px solid #444;
+  border-left: 1px solid #444;
+  font-size: 0.72rem;
+}
 
-    .cell {
-      height: calc(100vh - 90px);
-      border-right: 1px solid #444;
-      border-bottom: 1px solid #444;
-      padding: 4px;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
+.planner-row {
+  display: grid;
+  grid-template-columns: 22px repeat(4, 1fr);
+}
 
-    .person {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      letter-spacing: 1px;
-      padding: 0;
-      background: #050505;
-    }
+.cell {
+  height: calc((100vh - 24px) / 2);
+  border-right: 1px solid #444;
+  border-bottom: 1px solid #444;
+  padding: 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
 
-    .heaven {
-      color: #18a8ff;
-    }
+.person {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 1px;
+  padding: 0;
+  background: #050505;
+}
 
-    .daniel {
-      color: #9b6bff;
-    }
+.heaven { color: #18a8ff; }
+.daniel { color: #9b6bff; }
 
-    .day {
-      font-weight: bold;
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 4px;
-      border-bottom: 1px solid #222;
-      padding-bottom: 2px;
-    }
+.day {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 2px;
+}
 
-    ul {
-      margin: 0;
-      padding-left: 12px;
-    }
+ul {
+  margin: 0;
+  padding-left: 12px;
+}
 
-    li {
-      margin-bottom: 3px;
-      line-height: 1.1;
-    }
+li {
+  margin-bottom: 4px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
 
-    @media (orientation: landscape) {
-      .cell {
-        min-height: 260px;
-      }
+.empty {
+  color: #666;
+  list-style: none;
+  margin-left: -10px;
+}
 
-      .planner {
-        font-size: 0.75rem;
-      }
-    }
-  </style>
+.error { color: #ff7777; }
+
+@media (orientation: portrait) {
+  .planner-row {
+    grid-template-columns: 24px 1fr;
+  }
+
+  .cell {
+    height: auto;
+    min-height: 120px;
+  }
+
+  .person {
+    min-height: 480px;
+  }
+}
+</style>
 </head>
 
 <body>
-  <a class="back-link" href="index.html">←</a>
+<a class="back-link" href="index.html">←</a>
+<div class="status" id="status">Loading…</div>
 
-  <main class="page">
-    <section class="planner">
-      <div class="planner-row">
-        <div class="cell person heaven">HEAVEN</div>
+<main class="page">
+  <section class="planner">
+    <div class="planner-row" id="heaven-row">
+      <div class="cell person heaven">HEAVEN</div>
+    </div>
 
-        <div class="cell">
-          <div class="day heaven">Mon</div>
-          <ul>
-            <li>Balance sheet</li>
-            <li>Lead review</li>
-            <li>Calls / estimates</li>
-          </ul>
-        </div>
+    <div class="planner-row" id="daniel-row">
+      <div class="cell person daniel">DANIEL</div>
+    </div>
+  </section>
+</main>
 
-        <div class="cell">
-          <div class="day heaven">Tue</div>
-          <ul>
-            <li>GC / deconstruction</li>
-            <li>Field follow-up</li>
-            <li>Kids outing</li>
-          </ul>
-        </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        <div class="cell">
-          <div class="day heaven">Wed</div>
-          <ul>
-            <li>Cholobots dev</li>
-            <li>Library / work block</li>
-            <li>Hemisfair</li>
-          </ul>
-        </div>
+<script>
+const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 
-        <div class="cell">
-          <div class="day heaven">Thu</div>
-          <ul>
-            <li>GC / deconstruction</li>
-            <li>Field follow-up</li>
-            <li>Kids outing</li>
-          </ul>
-        </div>
-      </div>
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      <div class="planner-row">
-        <div class="cell person daniel">DANIEL</div>
+function getNextFourDates() {
+  const dates = [];
+  const today = new Date();
 
-        <div class="cell">
-          <div class="day daniel">Mon</div>
-          <ul>
-            <li>Handley Man ops</li>
-            <li>Materials / estimates</li>
-            <li>Customer communication</li>
-          </ul>
-        </div>
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
 
-        <div class="cell">
-          <div class="day daniel">Tue</div>
-          <ul>
-            <li>Field work</li>
-            <li>Jobsite</li>
-            <li>Wrap / photos</li>
-          </ul>
-        </div>
+  return dates;
+}
 
-        <div class="cell">
-          <div class="day daniel">Wed</div>
-          <ul>
-            <li>Customer calls</li>
-            <li>Chismebot queue</li>
-            <li>Dev support</li>
-          </ul>
-        </div>
+function formatDayLabel(dateString) {
+  const date = new Date(dateString + "T12:00:00");
+  return date.toLocaleDateString("en-US", { weekday: "short" });
+}
 
-        <div class="cell">
-          <div class="day daniel">Thu</div>
-          <ul>
-            <li>Field work</li>
-            <li>Jobsite</li>
-            <li>Wrap / photos</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  </main>
+function normalizeTask(task) {
+  if (typeof task === "string") return task;
+  if (task && typeof task === "object") {
+    return task.text || task.task || task.title || "";
+  }
+  return "";
+}
+
+function renderRow(rowId, personSchedule, colorClass) {
+  const row = document.getElementById(rowId);
+  const label = row.querySelector(".person");
+
+  row.innerHTML = "";
+  row.appendChild(label);
+
+  const dates = getNextFourDates();
+
+  dates.forEach(dateKey => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    const day = document.createElement("div");
+    day.className = `day ${colorClass}`;
+    day.textContent = formatDayLabel(dateKey);
+
+    const ul = document.createElement("ul");
+    const tasks = personSchedule?.[dateKey] || [];
+
+    if (tasks.length === 0) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Open";
+      ul.appendChild(li);
+    } else {
+      tasks.forEach(task => {
+        const text = normalizeTask(task);
+        if (!text) return;
+
+        const li = document.createElement("li");
+        li.textContent = text;
+        ul.appendChild(li);
+      });
+    }
+
+    cell.appendChild(day);
+    cell.appendChild(ul);
+    row.appendChild(cell);
+  });
+}
+
+async function loadSchedule() {
+  const status = document.getElementById("status");
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("metiche_weekly")
+      .select("calendar_json, created_at")
+      .order("id", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) throw error;
+
+    const calendar = data?.calendar_json || {};
+
+    renderRow("heaven-row", calendar.Heaven || {}, "heaven");
+    renderRow("daniel-row", calendar.Daniel || {}, "daniel");
+
+    status.textContent = "Live";
+    status.className = "status";
+  } catch (err) {
+    console.error("Schedule load failed:", err);
+    status.textContent = "Load failed";
+    status.className = "status error";
+  }
+}
+
+loadSchedule();
+setInterval(loadSchedule, 60000);
+</script>
 </body>
 </html>
