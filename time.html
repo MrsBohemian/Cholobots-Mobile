@@ -40,6 +40,7 @@ body {
   border-top: 1px solid #444;
   border-left: 1px solid #444;
   font-size: 0.72rem;
+  overflow: visible;
 }
 
 .planner-row {
@@ -48,12 +49,12 @@ body {
 }
 
 .cell {
-  height: calc((100vh - 24px) / 2);
-  border-right: 1px solid #444;
+  min-height: calc((100vh - 24px) / 2);
+  height: auto;  border-right: 1px solid #444;
   border-bottom: 1px solid #444;
   padding: 4px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .person {
