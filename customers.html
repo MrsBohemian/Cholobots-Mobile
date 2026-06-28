@@ -276,7 +276,6 @@ function renderStove() {
         <div class="field"><b>Active reason:</b> ${esc(row.active_reason || "None")}</div>
         <div class="field"><b>Follow-up:</b> ${esc(row.next_followup_date || c.next_followup_date || "None")}</div>
         <div class="field"><b>Owner:</b> ${esc(row.active_owner || "None")}</div>
-        <div class="field"><b>Lead temp:</b> ${esc(c.lead_temperature || 0)}°</div>
         <div class="field muted">${esc(c.chisme_summary || c.last_outcome || "")}</div>
       </div>
     `;
