@@ -480,11 +480,11 @@
 
     <div class="gear-track">
       <div class="gear-line"></div>
-      <div class="gear-dot r"></div>
-      <div class="gear-dot n"></div>
-      <div class="gear-dot d"></div>
-      <div class="gear-dot od"></div>
-      <div class="shifter"><div class="knob"></div><div class="stem"></div></div>
+      <div class="gear-dot r" id="gear-r"></div>
+      <div class="gear-dot n" id="gear-n"></div>
+      <div class="gear-dot d" id="gear-d"></div>
+      <div class="gear-dot od" id="gear-od"></div>
+      <div class="shifter" id="shifter"><div class="knob"></div><div class="stem"></div></div>   
     </div>
 
     <div class="gear-labels">
@@ -601,6 +601,36 @@
     const target = Number(weekly.target_amount || 0);
     const booked = Number(weekly.scheduled_revenue || 0);
     const pct = target > 0 ? Math.min(100, Math.round((booked / target) * 100)) : 0;
+
+    let gear = "D";
+    let gearLeft = "64%";
+    let modeTitle = "DRIVE — Cash flow positive";
+    let modeText = "You are generating more cash than you need to operate.";
+    
+    if (booked >= target * 1.25 && target > 0) {
+      gear = "OD";
+      gearLeft = "92%";
+      modeTitle = "OVERDRIVE — Surplus";
+      modeText = "You are beyond target. Protect the schedule and collect cleanly.";
+    } else if (booked >= target && target > 0) {
+      gear = "D";
+      gearLeft = "64%";
+    } else if (booked >= target * 0.4 && target > 0) {
+      gear = "N";
+      gearLeft = "36%";
+      modeTitle = "NEUTRAL — Survive";
+      modeText = "Enough movement to stabilize, but the week still needs money.";
+    } else {
+      gear = "R";
+      gearLeft = "8%";
+      modeTitle = "REVERSE — Deficit";
+      modeText = "The week needs leads, estimates, collections, or urgent booking.";
+    }
+    
+    document.getElementById("shifter").style.left = gearLeft;
+    document.querySelector(".mode-badge").textContent = gear;
+    document.querySelector(".mode-box strong").textContent = modeTitle;
+    document.querySelector(".mode-box p").textContent = modeText;
   
     document.getElementById("fuel-percent").textContent = pct + "%";
     document.getElementById("fuel-money").textContent = `${money(booked)} of ${money(target)}`;
