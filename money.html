@@ -432,8 +432,8 @@
         <div class="needle"></div>
         <div class="gauge-center">
           <div class="fuel-label">Fuel Level</div>
-          <div class="fuel-percent">72%</div>
-          <div class="fuel-money">$3,600 of $5,000</div>
+          <div class="fuel-percent" id="fuel-percent">72%</div>
+          <div class="fuel-money" id="fuel-money">$3,600 of $5,000</div>
         </div>
       </div>
       <div class="fuel-ends"><span>E</span><span>F</span></div>
@@ -450,11 +450,11 @@
 
     <div class="money-grid">
       <div class="money-box">
-        <strong>$3,600</strong>
+        <strong id="scheduled-income">$3,600</strong>
         <span>Scheduled income</span>
       </div>
       <div class="money-box">
-        <strong style="color:var(--text)">$5,000</strong>
+        <strong id="weekly-target" style="color:var(--text)">$5,000</strong>
         <span>Weekly target</span>
       </div>
     </div>
@@ -572,5 +572,44 @@
   </section>
 
   <div class="bottom-pad"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  function money(n) {
+    return "$" + Number(n || 0).toLocaleString();
+  }
+  
+  async function loadFinancialEngine() {
+    const { data, error } = await supabaseClient
+      .from("metiche_weekly")
+      .select("task_summary_json, created_at")
+      .order("id", { ascending: false })
+      .limit(1)
+      .single();
+  
+    if (error) {
+      console.error("Financial engine load failed:", error);
+      console.log(JSON.stringify(data, null, 2));
+      return;
+    }
+  
+    const weekly = data?.task_summary_json?.weekly_execution || {};
+    const target = Number(weekly.target_amount || 0);
+    const booked = Number(weekly.scheduled_revenue || 0);
+    const pct = target > 0 ? Math.min(100, Math.round((booked / target) * 100)) : 0;
+  
+    document.getElementById("fuel-percent").textContent = pct + "%";
+    document.getElementById("fuel-money").textContent = `${money(booked)} of ${money(target)}`;
+    document.getElementById("scheduled-income").textContent = money(booked);
+    document.getElementById("weekly-target").textContent = money(target);
+  }
+  
+  loadFinancialEngine();
+  setInterval(loadFinancialEngine, 60000);
+  </script>
 </body>
 </html>
