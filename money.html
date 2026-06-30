@@ -33,12 +33,24 @@
     body {
       max-width: 520px;
       margin: 0 auto;
-      padding: 10px 12px 14px;
+      padding: 52px 12px 14px;
       background:
         radial-gradient(circle at top, rgba(117,214,75,.09), transparent 36%),
         linear-gradient(180deg, #06080c, #05070a 45%, #020304);
     }
 
+    .back-link {
+      position: fixed;
+      top: 12px;
+      left: 16px;
+      font-size: 30px;
+      font-weight: bold;
+      color: var(--blue);
+      text-decoration: none;
+      opacity: 0.9;
+      z-index: 9999;
+    }
+    
     .card {
       background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
       border: 1px solid var(--line);
@@ -417,6 +429,8 @@
   </style>
 </head>
 <body>
+  <a class="back-link" href="index.html">←</a>
+
   <section class="card">
     <div class="card-title">
       <div class="icon" style="color:var(--green)">⛽</div>
