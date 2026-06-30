@@ -150,7 +150,7 @@
 <div class="app">
 
   <div class="toggle">
-    <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOT LIST</button>
+    <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOTLIST</button>
     <button id="stoveBtn" class="stovebtn" onclick="setMode('stove')">🔥 STOVETOP</button>
   </div>
 
@@ -205,15 +205,26 @@ function setMode(m) {
   document.getElementById("stoveBtn").classList.toggle("active", m === "stove");
 }
 
-/* HOT LIST = lead customer communication cards */
+/* HOTLIST = hot leads only: 75+ and NOT currently on stovetop */
 async function loadHot() {
+  const { data: activeRows, error: activeError } = await sb
+    .from("chisme_active")
+    .select("contact_id");
+
+  if (activeError) {
+    console.error("Active lookup for hotlist failed:", activeError);
+    hotCards = [];
+    return;
+  }
+
+  const activeIds = new Set((activeRows || []).map(r => r.contact_id));
+
   const { data, error } = await sb
     .from("chisme_contacts")
-    .select("id, name, phone, lead_temperature, next_action, last_outcome, chisme_summary, next_followup_date, next_contact_date, status, updated_at")
-    .eq("status", "lead")
+    .select("*")
+    .gte("lead_temperature", 75)
     .order("lead_temperature", { ascending:false })
-    .order("next_followup_date", { ascending:true, nullsFirst:false })
-    .order("updated_at", { ascending:false });
+    .order("next_followup_date", { ascending:true });
 
   if (error) {
     console.error("Hotlist load failed:", error);
@@ -221,7 +232,7 @@ async function loadHot() {
     return;
   }
 
-  hotCards = data || [];
+  hotCards = (data || []).filter(c => !activeIds.has(c.id));
 }
 
 /* STOVETOP = active table joined to contact card */
@@ -253,7 +264,7 @@ function renderHot() {
   const el = document.getElementById("hotStack");
 
   if (!hotCards.length) {
-    el.innerHTML = `<div class="empty">No lead communication cards found.</div>`;
+    el.innerHTML = `<div class="empty">No hot leads at 75° or above.</div>`;
     return;
   }
 
@@ -262,10 +273,10 @@ function renderHot() {
       <div class="banner">🌡 ${esc(c.lead_temperature || 0)}° LEAD</div>
       <div class="name">${esc(c.name || "Unknown")}</div>
 
-      <div class="field"><b>Temperature:</b> ${esc(c.lead_temperature ?? 0)}°</div>
+      <div class="field"><b>Temperature:</b> ${esc(c.lead_temperature || 0)}°</div>
       <div class="field"><b>Phone:</b> ${esc(c.phone || "No phone saved")}</div>
       <div class="field"><b>Next action:</b> ${esc(c.next_action || "None")}</div>
-      <div class="field"><b>Last outcome / chisme:</b> ${esc(c.last_outcome || c.chisme_summary || "None")}</div>
+      <div class="field"><b>Last outcome / chisme:</b> ${esc(c.last_outcome || c.chisme_summary || "No chisme logged")}</div>
       <div class="field"><b>Follow-up date:</b> ${esc(c.next_followup_date || c.next_contact_date || "None")}</div>
     </div>
   `).join("");
@@ -306,9 +317,6 @@ async function loadAll() {
 loadAll();
 setInterval(loadAll, 60000);
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
