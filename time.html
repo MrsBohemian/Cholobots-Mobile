@@ -13,107 +13,78 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.page { padding: 2px; }
-
 .back-link {
+  position: fixed;
+  top: 10px;
+  left: 14px;
+  font-size: 30px;
+  font-weight: bold;
   color: #18a8ff;
   text-decoration: none;
-  font-size: 0.75rem;
-  opacity: 0.6;
-  position: fixed;
-  top: 2px;
-  left: 4px;
-  z-index: 10;
+  opacity: 0.9;
+  z-index: 9999;
 }
 
 .status {
   position: fixed;
-  top: 3px;
-  right: 6px;
-  font-size: .62rem;
+  top: 18px;
+  right: 14px;
+  font-size: .7rem;
   color: #777;
-  z-index: 10;
+  z-index: 9999;
 }
 
-.planner {
-  margin-top: 18px;
-  border-top: 1px solid #444;
-  border-left: 1px solid #444;
-  font-size: 0.72rem;
-  overflow: visible;
+.page {
+  padding: 56px 12px 24px;
 }
 
-.planner-row {
-  display: grid;
-  grid-template-columns: 22px repeat(4, 1fr);
-  align-items: stretch;
+.person-block {
+  margin-bottom: 22px;
 }
 
-.cell {
-  min-height: calc((100vh - 24px) / 2);
-  height: auto;  border-right: 1px solid #444;
-  border-bottom: 1px solid #444;
-  padding: 4px;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.person {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  letter-spacing: 1px;
-  padding: 0;
-  background: #050505;
+.person-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #333;
 }
 
 .heaven { color: #18a8ff; }
 .daniel { color: #9b6bff; }
 
+.day-card {
+  background: #101010;
+  border: 1px solid #333;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
 .day {
-  font-size: 1.75rem;
-  font-weight: bold;
-  margin-bottom: 4px;
-  border-bottom: 1px solid #222;
-  padding-bottom: 2px;
+  font-size: 1.4rem;
+  font-weight: 900;
+  margin-bottom: 8px;
 }
 
 ul {
   margin: 0;
-  padding-left: 12px;
+  padding-left: 18px;
 }
 
 li {
-  margin-bottom: 4px;
-  line-height: 1.1;
+  margin-bottom: 6px;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .empty {
   color: #666;
   list-style: none;
-  margin-left: -10px;
+  margin-left: -18px;
 }
 
 .error { color: #ff7777; }
-
-@media (orientation: portrait) {
-  .planner-row {
-    grid-template-columns: 24px 1fr;
-  }
-
-  .cell {
-    height: auto;
-    min-height: 120px;
-  }
-
-  .person {
-    min-height: 480px;
-  }
-}
 </style>
 </head>
 
@@ -122,14 +93,14 @@ li {
 <div class="status" id="status">Loading…</div>
 
 <main class="page">
-  <section class="planner">
-    <div class="planner-row" id="heaven-row">
-      <div class="cell person heaven">HEAVEN</div>
-    </div>
+  <section class="person-block">
+    <h2 class="person-title heaven">HEAVEN</h2>
+    <div id="heaven-row"></div>
+  </section>
 
-    <div class="planner-row" id="daniel-row">
-      <div class="cell person daniel">DANIEL</div>
-    </div>
+  <section class="person-block">
+    <h2 class="person-title daniel">DANIEL</h2>
+    <div id="daniel-row"></div>
   </section>
 </main>
 
@@ -156,7 +127,11 @@ function getNextFourDates() {
 
 function formatDayLabel(dateString) {
   const date = new Date(dateString + "T12:00:00");
-  return date.toLocaleDateString("en-US", { weekday: "short" });
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  });
 }
 
 function normalizeTask(task) {
@@ -169,16 +144,13 @@ function normalizeTask(task) {
 
 function renderRow(rowId, personSchedule, colorClass) {
   const row = document.getElementById(rowId);
-  const label = row.querySelector(".person");
-
   row.innerHTML = "";
-  row.appendChild(label);
 
   const dates = getNextFourDates();
 
   dates.forEach(dateKey => {
-    const cell = document.createElement("div");
-    cell.className = "cell";
+    const card = document.createElement("div");
+    card.className = "day-card";
 
     const day = document.createElement("div");
     day.className = `day ${colorClass}`;
@@ -203,9 +175,9 @@ function renderRow(rowId, personSchedule, colorClass) {
       });
     }
 
-    cell.appendChild(day);
-    cell.appendChild(ul);
-    row.appendChild(cell);
+    card.appendChild(day);
+    card.appendChild(ul);
+    row.appendChild(card);
   });
 }
 
