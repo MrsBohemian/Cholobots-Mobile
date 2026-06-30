@@ -21,9 +21,19 @@
       font-family:Arial, Helvetica, sans-serif;
     }
 
+    .back-arrow {
+      position: fixed;
+      top: 14px;
+      left: 16px;
+      font-size: 32px;
+      color: white;
+      text-decoration: none;
+      z-index: 9999;
+    }
+    
     .app {
       min-height:100dvh;
-      padding:10px;
+      padding:56px 10px 10px;
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -130,20 +140,13 @@
       background:#111;
       line-height:1.35;
     }
-
-    .back-arrow {
-      position: fixed;
-      top: 14px;
-      left: 16px;
-      font-size: 32px;
-      color: white;
-      text-decoration: none;
-    }
+    
   </style>
 </head>
 
 <body>
 <a class="back-arrow" href="index.html">←</a>
+
 <div class="app">
 
   <div class="toggle">
