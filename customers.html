@@ -150,12 +150,12 @@
 <div class="app">
 
   <div class="toggle">
-    <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOTLIST</button>
+    <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOT LIST</button>
     <button id="stoveBtn" class="stovebtn" onclick="setMode('stove')">🔥 STOVETOP</button>
   </div>
 
   <div id="hotSection">
-    <div class="section-title">HOTLIST — 75°+</div>
+    <div class="section-title">HOT LIST — LEAD COMMUNICATION</div>
     <div id="hotStack" class="stack"></div>
   </div>
 
@@ -205,14 +205,15 @@ function setMode(m) {
   document.getElementById("stoveBtn").classList.toggle("active", m === "stove");
 }
 
-/* HOTLIST = contacts 75+ */
+/* HOT LIST = lead customer communication cards */
 async function loadHot() {
   const { data, error } = await sb
     .from("chisme_contacts")
-    .select("*")
-    .gte("lead_temperature", 75)
+    .select("id, name, phone, lead_temperature, next_action, last_outcome, chisme_summary, next_followup_date, next_contact_date, status, updated_at")
+    .eq("status", "lead")
     .order("lead_temperature", { ascending:false })
-    .order("next_followup_date", { ascending:true });
+    .order("next_followup_date", { ascending:true, nullsFirst:false })
+    .order("updated_at", { ascending:false });
 
   if (error) {
     console.error("Hotlist load failed:", error);
@@ -252,20 +253,20 @@ function renderHot() {
   const el = document.getElementById("hotStack");
 
   if (!hotCards.length) {
-    el.innerHTML = `<div class="empty">No hot leads at 75° or above.</div>`;
+    el.innerHTML = `<div class="empty">No lead communication cards found.</div>`;
     return;
   }
 
   el.innerHTML = hotCards.map(c => `
     <div class="card hot">
-      <div class="banner">🌡 HOTLIST — ${esc(c.lead_temperature || 0)}°</div>
+      <div class="banner">🌡 ${esc(c.lead_temperature || 0)}° LEAD</div>
       <div class="name">${esc(c.name || "Unknown")}</div>
-      <div class="meta">${esc(contactLine(c))}</div>
 
-      <div class="field"><b>Follow-up:</b> ${esc(c.next_followup_date || c.next_contact_date || "None")}</div>
+      <div class="field"><b>Temperature:</b> ${esc(c.lead_temperature ?? 0)}°</div>
+      <div class="field"><b>Phone:</b> ${esc(c.phone || "No phone saved")}</div>
       <div class="field"><b>Next action:</b> ${esc(c.next_action || "None")}</div>
-      <div class="field"><b>Status:</b> ${esc(c.status || "None")}</div>
-      <div class="field muted">${esc(c.last_outcome || c.chisme_summary || "")}</div>
+      <div class="field"><b>Last outcome / chisme:</b> ${esc(c.last_outcome || c.chisme_summary || "None")}</div>
+      <div class="field"><b>Follow-up date:</b> ${esc(c.next_followup_date || c.next_contact_date || "None")}</div>
     </div>
   `).join("");
 }
@@ -305,6 +306,9 @@ async function loadAll() {
 loadAll();
 setInterval(loadAll, 60000);
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
