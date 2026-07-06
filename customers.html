@@ -333,6 +333,42 @@ function renderHot() {
   `).join("");
 }
 
+function groupTasksByProject(tasks) {
+  const grouped = {};
+
+  for (const task of tasks || []) {
+    const project = task.project_name || "No project";
+    if (!grouped[project]) grouped[project] = [];
+    grouped[project].push(task);
+  }
+
+  return grouped;
+}
+
+function renderProjectBlock(projectName, tasks) {
+  const progress = getProjectProgress(tasks);
+
+  return `
+    <div class="field"><b>Project:</b> ${esc(projectName)}</div>
+
+    <div class="field">
+      <b>Ready:</b> ${progress.percent}% (${progress.done}/${progress.total})
+    </div>
+
+    <div class="field"><b>Honey-do List</b></div>
+
+    <div class="field">
+      ${
+        tasks.length
+          ? tasks.map((t, i) =>
+              `${t.completed ? "✅" : "⬜"} ${i + 1}. ${esc(t.task_text)}`
+            ).join("<br>")
+          : "<span class='muted'>No Metiche tasks.</span>"
+      }
+    </div>
+  `;
+}
+
 function renderStove() {
   const el = document.getElementById("stoveStack");
 
@@ -344,33 +380,27 @@ function renderStove() {
   el.innerHTML = stoveCards.map(row => {
     const c = row.chisme_contacts || {};
     const tasks = row.project_tasks || [];
-    const progress = getProjectProgress(tasks);
-    const projectName = tasks[0]?.project_name || "No project";
+    const groupedProjects = groupTasksByProject(tasks);
+    const projectNames = Object.keys(groupedProjects);
+
     return `
       <div class="card stove">
-        <div class="banner">🔥 STOVETOP — Burner ${esc(row.burner_position || 4)}</div>
+        <div class="banner">🔥 BURNER ${esc(row.burner_position || "?")}</div>
+
         <div class="name">${esc(c.name || "Unknown")}</div>
         <div class="meta">${esc(contactLine(c))}</div>
 
-        <div class="field"><b>Project:</b> ${esc(projectName)}</div>
-
-        <div class="field">
-        <b>Ready:</b>
-        ${progress.percent}% (${progress.done}/${progress.total})
-        </div>
-        
-        <div class="field"><b>Honey-do List</b></div>
-        
-        <div class="field">
         ${
-        tasks.length
-        ? tasks.map((t,i)=>
-        `${t.completed ? "✅" : "⬜"} ${i+1}. ${esc(t.task_text)}`
-        ).join("<br>")
-        : "<span class='muted'>No Metiche tasks.</span>"
+          projectNames.length
+            ? projectNames.map(projectName =>
+                renderProjectBlock(projectName, groupedProjects[projectName])
+              ).join(`<hr style="border:0;border-top:1px solid #333;margin:14px 0;">`)
+            : `
+              <div class="field"><b>Project:</b> No project</div>
+              <div class="field muted">No Metiche tasks yet.</div>
+            `
         }
-        </div>
-        
+
         <div class="field muted">${esc(c.last_outcome || "")}</div>
       </div>
     `;
@@ -384,7 +414,7 @@ async function loadAll() {
   renderStove();
   setMode(mode);
 }
-
+  
 loadAll();
 setInterval(loadAll, 60000);
 </script>
