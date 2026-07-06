@@ -12,7 +12,608 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
 .header{border:1px solid var(--border);background:linear-gradient(180deg,#171717,#0b0b0b);padding:22px}
 h1{margin:0;font-size:30px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
 .sub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.3}.grid{display:grid;grid-template-columns:1fr;gap:10px}
-.card{background:var(--card);border:1px solid var(--border);padding:20px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.title{font-size:24px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}.score{font-size:40px;font-weight:900;white-space:nowrap}.hint{color:var(--muted);font-size:12px;line-height:1.3;margin-top:4px}.bar-wrap{height:48px;background:#050505;border:1px solid var(--border);margin:10px 0 8px;overflow:hidden}.bar{height:100%;width:0%;transition:width .25s ease;background:var(--orange)}.meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}.orange .bar{background:linear-gradient(90deg,#7a3300,var(--orange))}.red .bar{background:linear-gradient(90deg,#5f0000,var(--red))}.green .bar{background:linear-gradient(90deg,#255d12,var(--green))}.blue .bar{background:linear-gradient(90deg,#063c5f,var(--blue))}.yellow .bar{background:linear-gradient(90deg,#6b4c00,var(--yellow))}.purple .bar{background:linear-gradient(90deg,#3d155f,var(--purple))}
+.card{background:var(--card);border:1px solid var(-<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Task Progress</title>
+
+<style>
+:root {
+  --bg:#070504;
+  --wood:#7a421f;
+  --wood-dark:#3b1c0d;
+  --panel:#151515;
+  --panel2:#0b0b0b;
+  --border:#3b2a1d;
+  --steel:#9d9688;
+  --orange:#ff9d1f;
+  --yellow:#ffd36a;
+  --text:#f4eadc;
+  --muted:#b9a98d;
+}
+
+* { box-sizing:border-box; }
+
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+.app {
+  min-height:100vh;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.35), transparent 18%, transparent 82%, rgba(0,0,0,.35)),
+    repeating-linear-gradient(
+      0deg,
+      var(--wood) 0px,
+      var(--wood) 18px,
+      var(--wood-dark) 19px,
+      var(--wood-dark) 22px
+    );
+  padding:14px 10px 28px;
+}
+
+.header {
+  text-align:center;
+  background:#1a1008;
+  border:4px solid #2b1609;
+  box-shadow:0 0 0 3px #000;
+  padding:14px 8px;
+  margin-bottom:14px;
+}
+
+.header h1 {
+  margin:0;
+  font-size:26px;
+  letter-spacing:.08em;
+  color:var(--yellow);
+  text-shadow:3px 3px #000;
+}
+
+.header p {
+  margin:5px 0 0;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.load-section {
+  background:rgba(8,8,8,.86);
+  border:4px solid #241409;
+  box-shadow:0 0 0 3px #000;
+  padding:12px;
+  margin-bottom:18px;
+}
+
+.load-card {
+  background:var(--panel);
+  border:3px solid #2e2e2e;
+  box-shadow:inset 0 0 0 2px #000;
+  padding:12px;
+  margin-bottom:12px;
+}
+
+.load-card:last-child { margin-bottom:0; }
+
+.load-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.load-title {
+  font-weight:900;
+  font-size:19px;
+  letter-spacing:.06em;
+  color:#fff;
+  text-shadow:2px 2px #000;
+}
+
+.load-count {
+  font-size:26px;
+  font-weight:900;
+  color:var(--yellow);
+  white-space:nowrap;
+  text-shadow:2px 2px #000;
+}
+
+.load-sub {
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+.bar {
+  height:22px;
+  background:#050505;
+  border:3px solid #3b3b3b;
+  box-shadow:inset 0 0 0 2px #000;
+  overflow:hidden;
+}
+
+.fill {
+  height:100%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #ff7a00 0px,
+      #ff7a00 8px,
+      #ffb22b 8px,
+      #ffb22b 16px
+    );
+  box-shadow:0 0 12px rgba(255,157,31,.7);
+}
+
+.percent-line {
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.stove-wrap {
+  margin-top:20px;
+  background:linear-gradient(135deg, var(--wood), var(--wood-dark));
+  border:5px solid #2b1609;
+  box-shadow:0 0 0 4px #000;
+  padding:12px;
+}
+
+.cabinet-top {
+  height:52px;
+  background:repeating-linear-gradient(
+    0deg,
+    #8c4b22 0px,
+    #8c4b22 10px,
+    #653116 11px,
+    #653116 14px
+  );
+  border:4px solid #33190b;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:12px;
+}
+
+.drawer-pull {
+  width:90px;
+  height:12px;
+  background:#d6b15b;
+  border:3px solid #5c3d13;
+  box-shadow:3px 3px #000;
+}
+
+.range {
+  background:var(--steel);
+  border:5px solid #4c4943;
+  box-shadow:inset 0 0 0 3px #d6d0c4;
+  padding:10px;
+}
+
+.stove-back {
+  background:#050505;
+  border:4px solid #333;
+  padding:12px;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.time {
+  color:#72dfff;
+  font-family:monospace;
+  font-size:22px;
+  font-weight:900;
+}
+
+.label {
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.18em;
+}
+
+.knobs {
+  display:flex;
+  justify-content:space-around;
+  background:#c6beb0;
+  border:4px solid #6f6b64;
+  padding:8px;
+  margin-bottom:10px;
+}
+
+.knob {
+  width:28px;
+  height:28px;
+  background:#e8dec7;
+  border:5px solid #4a463d;
+  border-radius:50%;
+  box-shadow:2px 2px #000;
+}
+
+.cooktop {
+  background:#050505;
+  border:5px solid #222;
+  padding:14px;
+}
+
+.cooktop h2 {
+  margin:0 0 12px;
+  text-align:center;
+  color:var(--orange);
+  letter-spacing:.14em;
+  text-shadow:2px 2px #000;
+}
+
+.job {
+  margin:13px 0;
+}
+
+.job-row {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-weight:900;
+  margin-bottom:5px;
+}
+
+.job-name {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.percent {
+  color:var(--yellow);
+  white-space:nowrap;
+}
+
+.oven-door {
+  height:120px;
+  background:#050505;
+  border:6px solid #67635b;
+  margin-top:12px;
+  position:relative;
+}
+
+.handle {
+  position:absolute;
+  top:-18px;
+  left:10%;
+  right:10%;
+  height:18px;
+  background:#d8d0c2;
+  border:3px solid #4c4943;
+}
+
+.towel {
+  position:absolute;
+  top:-8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:70px;
+  height:80px;
+  background:repeating-linear-gradient(
+    90deg,
+    #9e211a 0px,
+    #9e211a 10px,
+    #c63a2c 10px,
+    #c63a2c 20px
+  );
+  border:3px solid #4a0905;
+}
+
+.note {
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  margin:12px 0 0;
+}
+
+.footer {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+button {
+  background:#111;
+  color:var(--text);
+  border:4px solid #333;
+  padding:12px;
+  font-weight:900;
+  box-shadow:3px 3px #000;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <header class="header">
+    <h1>TASK PROGRESS</h1>
+    <p>Handley Man Cholobots</p>
+  </header>
+
+  <section class="load-section">
+
+    <div class="load-card">
+      <div class="load-top">
+        <div class="load-title">DAILY TASKS</div>
+        <div class="load-count">0 / 10</div>
+      </div>
+      <div class="load-sub">Non-customer work completed today</div>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <div class="percent-line"><span>0%</span><span>goal: 10</span></div>
+    </div>
+
+    <div class="load-card">
+      <div class="load-top">
+        <div class="load-title">HOT LIST</div>
+        <div class="load-count">0 / 4</div>
+      </div>
+      <div class="load-sub">Lead follow-up touches completed</div>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <div class="percent-line"><span>0%</span><span>goal: 4</span></div>
+    </div>
+
+    <div class="load-card">
+      <div class="load-top">
+        <div class="load-title">CUSTOMER COMMUNICATION</div>
+        <div class="load-count">0 / 15</div>
+      </div>
+      <div class="load-sub">Customer touches logged through Chismebot</div>
+      <div class="bar"><div class="fill" style="width:0%"></div></div>
+      <div class="percent-line"><span>0%</span><span>goal: 15 touches</span></div>
+    </div>
+
+  </section>
+
+  <section class="stove-wrap">
+    <div class="cabinet-top"><div class="drawer-pull"></div></div>
+
+    <div class="range">
+      <div class="stove-back">
+        <div class="time">12:16</div>
+        <div class="label">CHOLOBOTS RANGE</div>
+      </div>
+
+      <div class="knobs">
+        <div class="knob"></div>
+        <div class="knob"></div>
+        <div class="knob"></div>
+        <div class="knob"></div>
+      </div>
+
+      <div class="cooktop">
+        <h2>🔥 STOVETOP 🔥</h2>
+
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Vasquez</span>
+            <span class="percent">0% ready</span>
+          </div>
+          <div class="bar"><div class="fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Andy Holland</span>
+            <span class="percent">0% ready</span>
+          </div>
+          <div class="bar"><div class="fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Cecilia Conlee</span>
+            <span class="percent">0% ready</span>
+          </div>
+          <div class="bar"><div class="fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Michael Lawrence</span>
+            <span class="percent">0% ready</span>
+          </div>
+          <div class="bar"><div class="fill" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="oven-door">
+        <div class="handle"></div>
+        <div class="towel"></div>
+      </div>
+    </div>
+
+    <p class="note">Customer honey-do lists feed these percentages.</p>
+  </section>
+
+  <div class="footer">
+    <button onclick="history.back()">← BACK</button>
+    <button onclick="location.reload()">↻ REFRESH</button>
+  </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const GOALS = {
+  daily: 10,
+  hot: 4,
+  customer: 15
+};
+
+function todayLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function esc(v) {
+  return String(v ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function pct(done, total) {
+  if (!total) return 0;
+  return Math.min(100, Math.round((done / total) * 100));
+}
+
+function setLoadCard(index, done, goal, rightLabel) {
+  const cards = document.querySelectorAll(".load-card");
+  const card = cards[index];
+  if (!card) return;
+
+  const percent = pct(done, goal);
+
+  card.querySelector(".load-count").textContent = `${done} / ${goal}`;
+  card.querySelector(".fill").style.width = `${percent}%`;
+
+  const spans = card.querySelectorAll(".percent-line span");
+  if (spans[0]) spans[0].textContent = `${percent}%`;
+  if (spans[1] && rightLabel) spans[1].textContent = rightLabel;
+}
+
+function eventCount(events, types) {
+  const allowed = new Set(types);
+  return events.filter(e => allowed.has(e.event_type)).length;
+}
+
+function progressForTasks(tasks) {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.completed).length;
+  return { total, done, percent: pct(done, total) };
+}
+
+function renderStoveJobs(activeRows, tasksByContact) {
+  const cooktop = document.querySelector(".cooktop");
+  if (!cooktop) return;
+
+  const jobs = activeRows
+    .slice()
+    .sort((a, b) => (a.burner_position || 99) - (b.burner_position || 99))
+    .map(row => {
+      const contact = row.chisme_contacts || {};
+      const tasks = tasksByContact[row.contact_id] || [];
+      const progress = progressForTasks(tasks);
+      const name = contact.name || "Unknown";
+
+      return `
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Burner ${esc(row.burner_position || "?")} — ${esc(name)}</span>
+            <span class="percent">${progress.percent}% ready</span>
+          </div>
+          <div class="bar">
+            <div class="fill" style="width:${progress.percent}%"></div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  cooktop.innerHTML = `
+    <h2>🔥 STOVETOP 🔥</h2>
+    ${jobs || `<div class="job"><div class="job-row"><span class="job-name">No active burners</span><span class="percent">0% ready</span></div><div class="bar"><div class="fill" style="width:0%"></div></div></div>`}
+  `;
+}
+
+async function loadProgress() {
+  const today = todayLocal();
+
+  const [eventsRes, activeRes, hotRes] = await Promise.all([
+    sb.from("chisme_load_events")
+      .select("*")
+      .eq("event_date", today),
+
+    sb.from("chisme_active")
+      .select(`
+        id,
+        contact_id,
+        burner_position,
+        chisme_contacts (*)
+      `),
+
+    sb.from("chisme_contacts")
+      .select("id,name,lead_temperature")
+      .gte("lead_temperature", 75)
+  ]);
+
+  if (eventsRes.error) throw eventsRes.error;
+  if (activeRes.error) throw activeRes.error;
+  if (hotRes.error) throw hotRes.error;
+
+  const events = eventsRes.data || [];
+  const activeRows = activeRes.data || [];
+  const activeIds = new Set(activeRows.map(r => r.contact_id));
+  const hotOpen = (hotRes.data || []).filter(c => !activeIds.has(c.id));
+
+  const activeContactIds = activeRows.map(r => r.contact_id).filter(Boolean);
+
+  let projectTasks = [];
+  if (activeContactIds.length) {
+    const taskRes = await sb
+      .from("metiche_project_tasks")
+      .select("*")
+      .in("contact_id", activeContactIds);
+
+    if (taskRes.error) throw taskRes.error;
+    projectTasks = taskRes.data || [];
+  }
+
+  const tasksByContact = {};
+  for (const task of projectTasks) {
+    if (!tasksByContact[task.contact_id]) tasksByContact[task.contact_id] = [];
+    tasksByContact[task.contact_id].push(task);
+  }
+
+  const stoveDone = projectTasks.filter(t => t.completed).length;
+  const stoveTotal = projectTasks.length;
+
+  const dailyDone = eventCount(events, ["daily_task_done"]);
+  const hotDone = eventCount(events, ["hotlist_done"]);
+  const customerDone = eventCount(events, ["customer_communication", "chisme"]);
+
+  setLoadCard(0, dailyDone, GOALS.daily, "goal: 10");
+  setLoadCard(1, hotDone, hotDone + hotOpen.length, `open: ${hotOpen.length}`);
+  setLoadCard(2, customerDone, GOALS.customer, "goal: 15 touches");
+
+  renderStoveJobs(activeRows, tasksByContact);
+
+  const note = document.querySelector(".note");
+  if (note) {
+    note.textContent = `Live stovetop progress: ${stoveDone}/${stoveTotal} Metiche project tasks complete.`;
+  }
+}
+
+loadProgress().catch(err => {
+  console.error("Loadbar failed:", err);
+});
+
+setInterval(() => {
+  loadProgress().catch(err => console.error("Loadbar refresh failed:", err));
+}, 60000);
+</script>
+</body>
+</html>-border);padding:20px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.title{font-size:24px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}.score{font-size:40px;font-weight:900;white-space:nowrap}.hint{color:var(--muted);font-size:12px;line-height:1.3;margin-top:4px}.bar-wrap{height:48px;background:#050505;border:1px solid var(--border);margin:10px 0 8px;overflow:hidden}.bar{height:100%;width:0%;transition:width .25s ease;background:var(--orange)}.meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}.orange .bar{background:linear-gradient(90deg,#7a3300,var(--orange))}.red .bar{background:linear-gradient(90deg,#5f0000,var(--red))}.green .bar{background:linear-gradient(90deg,#255d12,var(--green))}.blue .bar{background:linear-gradient(90deg,#063c5f,var(--blue))}.yellow .bar{background:linear-gradient(90deg,#6b4c00,var(--yellow))}.purple .bar{background:linear-gradient(90deg,#3d155f,var(--purple))}
 .wins{background:var(--panel);border:1px solid var(--border);padding:12px}.wins h2{font-size:15px;margin:0 0 10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.win{border-top:1px solid #2a2a2a;padding:9px 0;font-size:14px;line-height:1.35}.win:first-of-type{border-top:0}.win b{color:#fff}.empty{color:var(--muted);padding:10px;background:#0b0b0b;border:1px dashed var(--border);font-size:14px}.error{color:#ffb3b3;white-space:pre-wrap}.footer{color:var(--muted);font-size:12px;line-height:1.4;padding:2px 4px}
 @media (min-width:1000px){.grid{grid-template-columns:1fr 1fr}.customer{grid-column:1 / -1}}
 </style>
