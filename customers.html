@@ -355,7 +355,7 @@ function renderProjectBlock(projectName, tasks) {
       <b>Ready:</b> ${progress.percent}% (${progress.done}/${progress.total})
     </div>
 
-    <div class="field"><b>Honey-do List</b></div>
+    <div class="field"><b>Project Tasks</b></div>
 
     <div class="field">
       ${
@@ -383,6 +383,15 @@ function renderStove() {
     const groupedProjects = groupTasksByProject(tasks);
     const projectNames = Object.keys(groupedProjects);
 
+    const projectHtml = projectNames.length
+      ? projectNames.map(projectName =>
+          renderProjectBlock(projectName, groupedProjects[projectName])
+        ).join(`<hr style="border:0;border-top:1px solid #333;margin:14px 0;">`)
+      : `
+        <div class="field"><b>Project:</b> No project</div>
+        <div class="field muted">No Metiche tasks yet.</div>
+      `;
+
     return `
       <div class="card stove">
         <div class="banner">🔥 BURNER ${esc(row.burner_position || "?")}</div>
@@ -390,30 +399,22 @@ function renderStove() {
         <div class="name">${esc(c.name || "Unknown")}</div>
         <div class="meta">${esc(contactLine(c))}</div>
 
-        ${
-          projectNames.length
-            ? projectNames.map(projectName =>
-                renderProjectBlock(projectName, groupedProjects[projectName])
-              ).join(`<hr style="border:0;border-top:1px solid #333;margin:14px 0;">`)
-            : `
-              <div class="field"><b>Project:</b> No project</div>
-              <div class="field muted">No Metiche tasks yet.</div>
-            `
-        }
+        ${projectHtml}
 
         <div class="field" style="margin-top:18px;">
-            <b>Project Notes</b>
+          <b>Project Notes</b>
         </div>
-        
+
         <details class="field muted">
-            <summary style="cursor:pointer;color:#ff6a00;font-weight:bold;">
-                Open project notes
-            </summary>
-        
-            <div style="white-space:pre-wrap;margin-top:10px;">
-                ${esc(c.chisme_summary || "No project notes yet.")}
-            </div>
+          <summary style="cursor:pointer;color:#ff6a00;font-weight:bold;">
+            Open project notes
+          </summary>
+
+          <div style="white-space:pre-wrap;margin-top:10px;">
+            ${esc(c.chisme_summary || "No project notes yet.")}
+          </div>
         </details>
+      </div>
     `;
   }).join("");
 }
