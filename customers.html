@@ -405,12 +405,28 @@ function renderStove() {
           <b>Project Notes</b>
         </div>
 
-        <details class="field muted">
-          <summary style="cursor:pointer;color:#ff6a00;font-weight:bold;">
-            Open project notes
+        <details class="field" style="margin-top:8px;">
+          <summary
+            style="
+              cursor:pointer;
+              color:#ff6a00;
+              font-weight:bold;
+              list-style:none;
+              outline:none;
+            ">
+            📝 Project Notes
           </summary>
-
-          <div style="white-space:pre-wrap;margin-top:10px;">
+        
+          <div
+            class="muted"
+            style="
+              margin-top:10px;
+              padding:10px;
+              background:#111;
+              border:1px solid #333;
+              border-radius:6px;
+              white-space:pre-wrap;
+            ">
             ${esc(c.chisme_summary || "No project notes yet.")}
           </div>
         </details>
