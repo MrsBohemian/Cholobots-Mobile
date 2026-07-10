@@ -380,7 +380,7 @@
       position:relative;
       z-index:2;
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1fr 1.15fr 1fr;
       gap:10px;
       margin-top:18px;
     }
@@ -394,6 +394,13 @@
       font-weight:900;
       text-transform:uppercase;
       box-shadow:3px 3px 0 #020506;
+      cursor:pointer;
+    }
+
+    .fridge-nav .deep-freezer-btn {
+      background:#9cdcff;
+      color:#06202b;
+      border-color:#245f79;
     }
 
     .fridge-counter {
@@ -994,7 +1001,7 @@ function renderFridge() {
           <button class="temp-cool" onclick="changeTemperature(-10)">Cool -10°</button>
           <button class="temp-warm" onclick="changeTemperature(10)">Warm +10°</button>
           <button class="temp-archive" onclick="setTemperature(0, false)">Archive 0°</button>
-          <button class="temp-stop" onclick="setTemperature(-10, true)">Do not pursue -10°</button>
+          <button class="temp-stop" onclick="setTemperature(-10, false)">Do not pursue -10°</button>
         </div>
 
         <div id="tempMessage" class="temp-message"></div>
@@ -1003,6 +1010,7 @@ function renderFridge() {
 
     <div class="fridge-nav">
       <button onclick="previousFridgeCustomer()">◀ Previous</button>
+      <button class="deep-freezer-btn" onclick="goToDeepFreezer()">🧊 Deep freezer</button>
       <button onclick="nextFridgeCustomer()">Next ▶</button>
     </div>
 
@@ -1021,12 +1029,20 @@ function showTempMessage(message) {
 async function saveCustomerTemperature(c, temperature, doNotPursue) {
   showTempMessage("Saving...");
 
+  const changes = {
+    hotlist_temperature:temperature
+  };
+
+  // Only change the boolean when explicitly needed.
+  if (doNotPursue === true) {
+    changes.do_not_pursue = true;
+  } else if (temperature >= 0) {
+    changes.do_not_pursue = false;
+  }
+
   const { error } = await sb
     .from("chisme_contacts")
-    .update({
-      hotlist_temperature:temperature,
-      do_not_pursue:doNotPursue
-    })
+    .update(changes)
     .eq("id", c.id);
 
   if (error) {
@@ -1084,6 +1100,16 @@ async function setTemperature(value, doNotPursue) {
   showTempMessage(`Temperature saved at ${value}°.`);
 }
 
+
+function goToDeepFreezer() {
+  if (!fridgeCards.length) return;
+  fridgeIndex = fridgeCards.length - 1;
+  renderFridge();
+
+  const shell = document.querySelector(".fridge-shell");
+  if (shell) shell.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
 function previousFridgeCustomer() {
   if (!fridgeCards.length) return;
   fridgeIndex = (fridgeIndex - 1 + fridgeCards.length) % fridgeCards.length;
@@ -1106,11 +1132,6 @@ async function loadAll() {
 }
   
 loadAll();
-setInterval(loadAll, 60000);
-</script>
-
-</body>
-</html>
 setInterval(loadAll, 60000);
 </script>
 
