@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Crudobot Job Costing</title>
+  <style>
+    :root{
+      --bg:#050403;
+      --panel:#17110d;
+      --panel2:#211812;
+      --line:#5f3c24;
+      --text:#f6eadc;
+      --muted:#bda48d;
+      --orange:#ff7a18;
+      --amber:#ffc247;
+      --green:#74dc78;
+      --red:#ff6868;
+      --steel:#b8c4c8;
+      --ink:#160b05;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100dvh;
+      background:
+        linear-gradient(rgba(255,122,24,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,122,24,.035) 1px, transparent 1px),
+        var(--bg);
+      background-size:18px 18px;
+      color:var(--text);
+      font-family:"Courier New", monospace;
+    }
+    button,select{font:inherit}
+    .app{width:min(760px,100%);margin:auto;padding:16px 12px 40px}
+    .topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .back{color:var(--text);text-decoration:none;font-size:28px;line-height:1}
+    .title-wrap{flex:1}
+    .eyebrow{color:var(--orange);font-size:11px;font-weight:900;letter-spacing:.16em}
+    h1{font-size:22px;margin:2px 0 0;line-height:1}
+    .refresh{
+      border:2px solid var(--line);background:var(--panel);color:var(--amber);
+      padding:9px 10px;font-weight:900;box-shadow:3px 3px 0 #000;
+    }
+    .robot-head{
+      border:4px solid #090503;background:var(--steel);color:var(--ink);
+      padding:8px;box-shadow:0 0 0 3px var(--line),6px 6px 0 #000;margin-bottom:14px
+    }
+    .face{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+    .eye{height:22px;background:#1a0c05;border:4px solid #6e7678;position:relative}
+    .eye:after{content:"";position:absolute;inset:4px;background:var(--orange)}
+    .mouth{background:#1a0c05;color:var(--amber);padding:7px 10px;font-weight:900;text-align:center}
+    .controls{
+      display:grid;grid-template-columns:1fr auto;gap:8px;
+      padding:10px;background:var(--panel);border:2px solid var(--line);margin-bottom:12px
+    }
+    select{
+      min-width:0;background:#090705;color:var(--text);border:2px solid var(--line);
+      padding:10px;font-weight:900
+    }
+    .status{color:var(--muted);font-size:12px;margin:4px 0 12px;min-height:15px}
+    .report{display:grid;gap:12px}
+    .card{
+      background:var(--panel);border:2px solid var(--line);
+      box-shadow:4px 4px 0 #000;overflow:hidden
+    }
+    .card-title{
+      background:var(--panel2);border-bottom:2px solid var(--line);
+      padding:8px 10px;color:var(--orange);font-size:12px;font-weight:900;letter-spacing:.12em
+    }
+    .card-body{padding:10px}
+    .hero{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .metric{background:#0c0907;border:1px solid #3c2a1e;padding:10px}
+    .metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    .metric-value{font-size:22px;font-weight:900;margin-top:4px}
+    .profit{color:var(--green)}
+    .loss{color:var(--red)}
+    .row{
+      display:grid;grid-template-columns:1fr auto;gap:12px;
+      padding:8px 0;border-bottom:1px dashed #5d4635;align-items:start
+    }
+    .row:last-child{border-bottom:0}
+    .row .label{color:var(--muted)}
+    .row .value{text-align:right;font-weight:900}
+    .total{font-size:17px;color:var(--amber);border-top:2px solid var(--line);margin-top:5px;padding-top:10px}
+    .warning{
+      padding:9px;border:2px solid #8e5b1c;background:#2b1a09;color:#ffd98c;
+      font-size:12px;line-height:1.45;margin-top:10px
+    }
+    .note{white-space:pre-wrap;line-height:1.45;color:#ead8c6}
+    .details{margin-top:8px}
+    summary{cursor:pointer;color:var(--amber);font-weight:900;padding:4px 0}
+    .small-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+    .small-table th,.small-table td{padding:7px 5px;border-bottom:1px solid #3d2b20;text-align:left;vertical-align:top}
+    .small-table th{color:var(--muted)}
+    .small-table td:last-child,.small-table th:last-child{text-align:right}
+    .empty{color:var(--muted);padding:8px 0}
+    .foot{margin-top:14px;text-align:center;color:#7e6959;font-size:10px;letter-spacing:.12em}
+    @media(max-width:520px){
+      .app{padding:12px 9px 34px}
+      .hero{grid-template-columns:1fr 1fr}
+      .metric-value{font-size:18px}
+      h1{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <a class="back" href="index.html">←</a>
+    <div class="title-wrap">
+      <div class="eyebrow">CHOLOBOTS FINANCIAL INTELLIGENCE</div>
+      <h1>CRUDOBOT JOB COSTING</h1>
+    </div>
+    <button class="refresh" onclick="loadReport()">↻</button>
+  </div>
+
+  <div class="robot-head">
+    <div class="face">
+      <div class="eye"></div>
+      <div class="mouth" id="robotMessage">SHOW ME THE NUMBERS</div>
+      <div class="eye"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <select id="projectSelect" onchange="loadReport()"></select>
+    <button class="refresh" onclick="loadReport()">LOAD</button>
+  </div>
+  <div id="status" class="status">Connecting to Supabase…</div>
+
+  <div id="report" class="report"></div>
+  <div class="foot">GUARDABOT MATERIALS + OBIJUAN QUEST PAYOUTS + CRUDOBOT JOB RECORD</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const $ = id => document.getElementById(id);
+const esc = value => String(value ?? "")
+  .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+const money = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n||0));
+const slugify = s => String(s||"").trim().toLowerCase().replace(/[_\s]+/g,"-").replace(/[^a-z0-9-]/g,"");
+const signedTransaction = row => {
+  const total = Math.abs(Number(row.total || 0));
+  const type = String(row.transaction_type || "").toLowerCase();
+  return ["return","credit","refund"].includes(type) ? -total : total;
+};
+const payoutValue = row => row.paid_amount == null
+  ? Number(row.accepted_price || 0)
+  : Number(row.paid_amount || 0);
+
+async function loadProjects(){
+  const {data,error} = await sb
+    .from("crudobot_jobs")
+    .select("project_slug,project_name,status")
+    .order("project_name");
+  if(error){
+    $("status").textContent = "Crudobot jobs could not load: " + error.message;
+    return;
+  }
+  const select = $("projectSelect");
+  const requested = new URLSearchParams(location.search).get("project");
+  select.innerHTML = (data||[]).map(row =>
+    `<option value="${esc(row.project_slug)}">${esc(row.project_name)}</option>`
+  ).join("");
+  if(requested && [...select.options].some(o => o.value === requested)) select.value = requested;
+  if(!select.value && data?.length) select.value = data[0].project_slug;
+}
+
+async function loadReport(){
+  const slug = $("projectSelect").value;
+  if(!slug){
+    $("report").innerHTML = `<div class="card"><div class="card-body empty">No Crudobot jobs saved yet.</div></div>`;
+    $("status").textContent = "Create a row in crudobot_jobs first.";
+    return;
+  }
+
+  $("status").textContent = "Crudobot is pulling the job together…";
+  $("robotMessage").textContent = "COUNTING THE DAMAGE";
+
+  const jobResult = await sb.from("crudobot_jobs").select("*").eq("project_slug",slug).single();
+  if(jobResult.error){
+    $("status").textContent = "Job record failed: " + jobResult.error.message;
+    return;
+  }
+  const job = jobResult.data;
+  const projectName = job.project_name;
+  const questId = job.quest_id || slug;
+
+  const [txResult,itemResult,laborResult,timeResult] = await Promise.all([
+    sb.from("guard_job_transactions").select("*").ilike("project_name",projectName).order("transaction_date"),
+    sb.from("guard_job_items").select("*").ilike("project_name",projectName).order("created_at"),
+    sb.from("obijuan_quest_assignments").select("*").eq("quest_id",questId).order("accepted_at"),
+    sb.from("obijuan_owner_time").select("*").eq("quest_id",questId).order("created_at")
+  ]);
+
+  const errors = [txResult.error,itemResult.error,laborResult.error,timeResult.error].filter(Boolean);
+  if(errors.length){
+    $("status").textContent = "Some job-cost sources failed: " + errors.map(e=>e.message).join(" | ");
+  } else {
+    $("status").textContent = "Live report loaded from Crudobot, Guardabot, and ObiJuan.";
+  }
+
+  const transactions = txResult.data || [];
+  const items = itemResult.data || [];
+  const labor = laborResult.data || [];
+  const ownerTime = timeResult.data || [];
+
+  const actualTransactions = transactions.filter(r =>
+    !["planned","estimate","budget"].includes(String(r.transaction_type||"").toLowerCase())
+  );
+  const plannedTransactions = transactions.filter(r =>
+    ["planned","estimate","budget"].includes(String(r.transaction_type||"").toLowerCase())
+  );
+
+  const materialsActual = actualTransactions.reduce((sum,row)=>sum+signedTransaction(row),0);
+  const materialsPlanned = plannedTransactions.reduce((sum,row)=>sum+Math.abs(Number(row.total||0)),0);
+  const subcontractLabor = labor.reduce((sum,row)=>sum+payoutValue(row),0);
+  const otherCosts = Number(job.other_direct_costs || 0);
+  const directCost = materialsActual + subcontractLabor + otherCosts;
+  const projectedCost = directCost + materialsPlanned;
+  const revenue = Number(job.final_invoice || job.original_bid || 0);
+  const grossProfit = revenue - directCost;
+  const projectedProfit = revenue - projectedCost;
+  const margin = revenue ? grossProfit / revenue * 100 : 0;
+  const projectedMargin = revenue ? projectedProfit / revenue * 100 : 0;
+  const ownerTimeLabel = ownerTime.length
+    ? ownerTime.map(r=>`${Number(r.quantity||0).toLocaleString()} ${esc(r.unit||"days")} — ${esc(r.owner_name||"Owner")}`).join("<br>")
+    : "Not recorded";
+
+  $("robotMessage").textContent = grossProfit >= 0 ? "WE STILL MADE MONEY" : "AY, CARNAL…";
+  $("report").innerHTML = `
+    <section class="card">
+      <div class="card-title">${esc(projectName)} · ${esc(job.status || "OPEN")}</div>
+      <div class="card-body hero">
+        <div class="metric">
+          <div class="metric-label">Revenue used</div>
+          <div class="metric-value">${money(revenue)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Gross profit</div>
+          <div class="metric-value ${grossProfit >= 0 ? "profit":"loss"}">${money(grossProfit)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Gross margin</div>
+          <div class="metric-value ${margin >= 25 ? "profit": margin < 0 ? "loss":""}">${margin.toFixed(1)}%</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Direct cost</div>
+          <div class="metric-value">${money(directCost)}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">REVENUE</div>
+      <div class="card-body">
+        <div class="row"><div class="label">Original bid</div><div class="value">${money(job.original_bid)}</div></div>
+        <div class="row"><div class="label">Final invoice</div><div class="value">${job.final_invoice == null ? "Not saved" : money(job.final_invoice)}</div></div>
+        <div class="row"><div class="label">Payments received</div><div class="value">${job.amount_collected == null ? "Not saved" : money(job.amount_collected)}</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">DIRECT JOB COST</div>
+      <div class="card-body">
+        <div class="row"><div class="label">Materials — actual</div><div class="value">${money(materialsActual)}</div></div>
+        <div class="row"><div class="label">Quest / subcontract payouts</div><div class="value">${money(subcontractLabor)}</div></div>
+        <div class="row"><div class="label">Other direct costs</div><div class="value">${money(otherCosts)}</div></div>
+        <div class="row total"><div>Total direct cost</div><div class="value">${money(directCost)}</div></div>
+        ${materialsPlanned ? `
+          <div class="warning">
+            Planned but not yet actual: ${money(materialsPlanned)}<br>
+            Projected cost: ${money(projectedCost)} · Projected profit: ${money(projectedProfit)}
+            · Projected margin: ${projectedMargin.toFixed(1)}%
+          </div>` : ""}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">OWNER TIME — STORED, NOT COSTED</div>
+      <div class="card-body note">${ownerTimeLabel}</div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">MATERIAL TRANSACTIONS</div>
+      <div class="card-body">
+        ${transactions.length ? `
+        <table class="small-table">
+          <thead><tr><th>Date / Vendor</th><th>Type</th><th>Total</th></tr></thead>
+          <tbody>${transactions.map(r=>`
+            <tr>
+              <td>${esc(r.transaction_date || "")}<br>${esc(r.vendor || "Unknown")}</td>
+              <td>${esc(r.transaction_type || "purchase")}</td>
+              <td>${money(signedTransaction(r))}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>` : `<div class="empty">No Guardabot transactions saved for this project.</div>`}
+        <details class="details">
+          <summary>Show harvested material lines (${items.length})</summary>
+          ${items.length ? `
+            <table class="small-table">
+              <thead><tr><th>Material</th><th>Qty / Unit</th><th>Total</th></tr></thead>
+              <tbody>${items.map(i=>`
+                <tr>
+                  <td>${esc(i.description || "")}${i.sku ? `<br><span style="color:#8f7865">SKU ${esc(i.sku)}</span>`:""}</td>
+                  <td>${esc(i.quantity || 0)} ${esc(i.unit || "")}</td>
+                  <td>${money((String(i.line_type||"").toLowerCase()==="return" ? -1:1)*Number(i.line_total||0))}</td>
+                </tr>`).join("")}
+              </tbody>
+            </table>` : `<div class="empty">No parsed material lines yet.</div>`}
+        </details>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">QUEST LABOR</div>
+      <div class="card-body">
+        ${labor.length ? labor.map(r=>`
+          <div class="row">
+            <div>
+              <div>${esc(r.worker_name || "Worker")}</div>
+              <div class="label">${esc(r.status || "accepted")}</div>
+            </div>
+            <div class="value">${money(payoutValue(r))}</div>
+          </div>`).join("") : `<div class="empty">No ObiJuan quest prices or payouts saved.</div>`}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">CRUDOBOT NOTES</div>
+      <div class="card-body note">${esc(job.closeout_notes || "No closeout notes saved.")}</div>
+    </section>
+  `;
+}
+
+(async function init(){
+  await loadProjects();
+  await loadReport();
+})();
+</script>
+</body>
+</html>
