@@ -10,6 +10,8 @@
       --bg:#000; --card:#1b1b1b; --border:#333;
       --text:#eee; --muted:#9a9a9a;
       --hot:#ff6a00; --stove:#ff2d2d;
+      --fridge:#75dcff; --fridge-dark:#174e63;
+      --fridge-light:#dff8ff;
     }
 
     * { box-sizing:border-box; }
@@ -40,8 +42,9 @@
     }
 
     .toggle {
-      display:flex;
-      gap:10px;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:8px;
       position:sticky;
       top:0;
       background:#000;
@@ -50,13 +53,18 @@
     }
 
     .toggle button {
-      flex:1;
-      padding:12px;
+      min-width:0;
+      padding:11px 4px;
       background:#111;
       border:1px solid var(--border);
       color:var(--text);
-      font-weight:800;
-      font-size:15px;
+      font-weight:900;
+      font-size:12px;
+      line-height:1.05;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
     }
 
     .toggle button.active.hotbtn {
@@ -67,6 +75,12 @@
     .toggle button.active.stovebtn {
       border-color:var(--stove);
       color:var(--stove);
+    }
+
+    .toggle button.active.fridgebtn {
+      border-color:var(--fridge);
+      color:var(--fridge);
+      box-shadow:0 0 0 2px rgba(117,220,255,.12);
     }
 
     .section-title {
@@ -141,6 +155,297 @@
       line-height:1.35;
     }
     
+
+    /* Refrigerator tab icon */
+    .pixel-fridge-icon {
+      width:15px;
+      height:19px;
+      position:relative;
+      display:inline-block;
+      background:#bcefff;
+      border:2px solid #edfcff;
+      box-shadow:
+        2px 0 0 #458da8,
+        -2px 0 0 #0f3544,
+        0 2px 0 #0f3544;
+      flex:0 0 auto;
+    }
+
+    .pixel-fridge-icon::before {
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:7px;
+      height:2px;
+      background:#0f3544;
+    }
+
+    .pixel-fridge-icon::after {
+      content:"";
+      position:absolute;
+      right:1px;
+      top:2px;
+      width:2px;
+      height:4px;
+      background:#0f3544;
+      box-shadow:0 9px 0 #0f3544;
+    }
+
+    /* The refrigerator itself is the workspace. */
+    .fridge-shell {
+      width:100%;
+      max-width:520px;
+      margin:4px auto 14px;
+      background:#08222d;
+      border:5px solid #020506;
+      box-shadow:
+        0 0 0 4px var(--fridge-dark),
+        0 0 0 8px #020506,
+        0 10px 0 #020506;
+      font-family:"Courier New", monospace;
+    }
+
+    .fridge-header {
+      min-height:54px;
+      padding:11px 50px 10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#082531;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.55), transparent 24%),
+        linear-gradient(#e3f9ff, #9bd9ef);
+      border-bottom:5px solid #123c4c;
+      font-weight:900;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+      text-shadow:1px 1px 0 #fff;
+      position:relative;
+    }
+
+    .fridge-handle {
+      position:absolute;
+      right:15px;
+      top:10px;
+      width:9px;
+      height:34px;
+      background:#123c4c;
+      box-shadow:-3px 0 0 #e7fbff;
+    }
+
+    .fridge-cavity {
+      position:relative;
+      min-height:590px;
+      padding:18px 14px 24px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08), transparent 20%),
+        linear-gradient(#77bdd5, #4c91aa);
+      border:6px solid #123c4c;
+    }
+
+    .fridge-inner {
+      position:relative;
+      min-height:540px;
+      padding:18px 14px 30px;
+      background:#061820;
+      border:4px solid #dbf6ff;
+      box-shadow:
+        inset 0 0 0 4px #266d87,
+        inset 0 -18px 0 #0a2b38;
+      overflow:hidden;
+    }
+
+    .fridge-inner::before,
+    .fridge-inner::after {
+      content:"";
+      position:absolute;
+      left:14px;
+      right:14px;
+      height:5px;
+      background:#92ddf5;
+      box-shadow:0 4px 0 #1c5368;
+      z-index:0;
+    }
+
+    .fridge-inner::before { top:39%; }
+    .fridge-inner::after { top:73%; }
+
+    .fridge-light {
+      width:38px;
+      height:10px;
+      margin:0 auto 18px;
+      background:#fff7a3;
+      box-shadow:
+        0 0 0 3px #d9ab2e,
+        0 0 16px 5px rgba(255,244,150,.35);
+      position:relative;
+      z-index:2;
+    }
+
+    .customer-fridge-card {
+      position:relative;
+      z-index:2;
+      background:#0e2732;
+      border:3px solid var(--fridge);
+      padding:14px;
+      box-shadow:
+        4px 4px 0 #020506,
+        inset 0 0 0 2px #23566a;
+    }
+
+    .fridge-card-top {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:2px solid #23566a;
+      padding-bottom:10px;
+      margin-bottom:10px;
+    }
+
+    .fridge-name {
+      color:#fff;
+      font-size:24px;
+      line-height:1.05;
+      font-weight:900;
+      text-transform:uppercase;
+      word-break:break-word;
+      text-shadow:2px 2px 0 #123c4c;
+    }
+
+    .fridge-temp {
+      flex:0 0 auto;
+      min-width:58px;
+      padding:7px 6px;
+      color:#071920;
+      background:#dff8ff;
+      border:3px solid #1b566d;
+      font-size:21px;
+      font-weight:900;
+      text-align:center;
+      box-shadow:3px 3px 0 #020506;
+    }
+
+    .fridge-contact {
+      display:grid;
+      gap:7px;
+      margin-bottom:12px;
+      color:#f4fcff;
+      font-size:14px;
+      line-height:1.35;
+    }
+
+    .fridge-contact-row {
+      padding:7px 8px;
+      background:#071920;
+      border:2px solid #1f5366;
+      word-break:break-word;
+    }
+
+    .fridge-contact-row b {
+      color:var(--fridge);
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      font-size:11px;
+      display:block;
+      margin-bottom:3px;
+    }
+
+    .chisme-log {
+      margin-top:10px;
+      padding:11px;
+      min-height:150px;
+      color:#241c00;
+      background:#fff2a8;
+      border:3px solid #886900;
+      box-shadow:4px 4px 0 #352900;
+      transform:rotate(-.25deg);
+    }
+
+    .chisme-log-title {
+      margin-bottom:8px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      border-bottom:2px dashed #886900;
+      padding-bottom:5px;
+    }
+
+    .chisme-entry {
+      padding:8px 0;
+      border-bottom:1px dashed rgba(70,53,0,.4);
+      white-space:pre-wrap;
+      line-height:1.35;
+      font-size:14px;
+    }
+
+    .chisme-entry:last-child { border-bottom:0; }
+
+    .chisme-date {
+      display:block;
+      margin-bottom:3px;
+      font-size:11px;
+      font-weight:900;
+      color:#655000;
+    }
+
+    .fridge-nav {
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .fridge-nav button {
+      padding:11px 8px;
+      color:#082531;
+      background:#dff8ff;
+      border:3px solid #123c4c;
+      font-family:"Courier New", monospace;
+      font-weight:900;
+      text-transform:uppercase;
+      box-shadow:3px 3px 0 #020506;
+    }
+
+    .fridge-counter {
+      position:relative;
+      z-index:2;
+      margin-top:12px;
+      color:#98e3fa;
+      text-align:center;
+      font-size:12px;
+      letter-spacing:.07em;
+    }
+
+    .pixel-food {
+      position:absolute;
+      z-index:0;
+      left:25px;
+      bottom:27px;
+      width:22px;
+      height:17px;
+      background:#ffd84b;
+      border:3px solid #755700;
+      box-shadow:
+        34px -3px 0 #69df6f,
+        34px -3px 0 3px #165923,
+        78px 2px 0 #ff78b8,
+        78px 2px 0 3px #7a1745;
+      opacity:.75;
+    }
+
+    @media (max-width:390px) {
+      .toggle button { font-size:10px; }
+      .fridge-shell { margin-top:2px; }
+      .fridge-cavity { min-height:560px; }
+      .fridge-inner { min-height:510px; }
+      .fridge-name { font-size:21px; }
+      .fridge-temp { font-size:18px; min-width:52px; }
+    }
+
   </style>
 </head>
 
@@ -152,16 +457,36 @@
   <div class="toggle">
     <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOTLIST</button>
     <button id="stoveBtn" class="stovebtn" onclick="setMode('stove')">🔥 STOVETOP</button>
+    <button id="fridgeBtn" class="fridgebtn" onclick="setMode('fridge')">
+      <span class="pixel-fridge-icon" aria-hidden="true"></span>
+      FRIDGE
+    </button>
   </div>
 
   <div id="hotSection">
-    <div class="section-title">HOT LIST — LEAD COMMUNICATION</div>
     <div id="hotStack" class="stack"></div>
   </div>
 
   <div id="stoveSection">
-    <div class="section-title">STOVETOP</div>
     <div id="stoveStack" class="stack"></div>
+  </div>
+
+  <div id="fridgeSection">
+    <div class="fridge-shell">
+      <div class="fridge-header">
+        <span class="pixel-fridge-icon" aria-hidden="true"></span>
+        Chismebot Refrigerator
+        <span class="fridge-handle" aria-hidden="true"></span>
+      </div>
+
+      <div class="fridge-cavity">
+        <div class="fridge-inner">
+          <div class="fridge-light" aria-hidden="true"></div>
+          <div class="pixel-food" aria-hidden="true"></div>
+          <div id="fridgeStack"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -174,9 +499,12 @@ const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let mode = "hot";
+let mode = "fridge";
 let hotCards = [];
 let stoveCards = [];
+let fridgeCards = [];
+let fridgeIndex = 0;
+let fridgeLogs = {};
 
 function esc(v) {
   return String(v ?? "")
@@ -200,12 +528,14 @@ function setMode(m) {
 
   document.getElementById("hotSection").style.display = (m === "hot") ? "block" : "none";
   document.getElementById("stoveSection").style.display = (m === "stove") ? "block" : "none";
+  document.getElementById("fridgeSection").style.display = (m === "fridge") ? "block" : "none";
 
   document.getElementById("hotBtn").classList.toggle("active", m === "hot");
   document.getElementById("stoveBtn").classList.toggle("active", m === "stove");
+  document.getElementById("fridgeBtn").classList.toggle("active", m === "fridge");
 }
 
-/* HOTLIST = hot leads only: 75+ and NOT currently on stovetop */
+/* HOTLIST = customers at 51° or above who are not currently on the stovetop. */
 async function loadHot() {
   const { data: activeRows, error: activeError } = await sb
     .from("chisme_active")
@@ -222,8 +552,9 @@ async function loadHot() {
   const { data, error } = await sb
     .from("chisme_contacts")
     .select("*")
-    .gte("lead_temperature", 75)
-    .order("lead_temperature", { ascending:false })
+    .gte("hotlist_temperature", 51)
+    .or("do_not_pursue.is.null,do_not_pursue.eq.false")
+    .order("hotlist_temperature", { ascending:false })
     .order("next_followup_date", { ascending:true });
 
   if (error) {
@@ -258,6 +589,79 @@ async function loadStove() {
   }
 
   stoveCards = data || [];
+}
+
+
+function formatDate(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("en-US", {
+    year:"numeric",
+    month:"short",
+    day:"numeric"
+  });
+}
+
+/* REFRIGERATOR = paying past customers at 0–50° who are not on the stovetop. */
+async function loadFridge() {
+  const { data: activeRows, error: activeError } = await sb
+    .from("chisme_active")
+    .select("contact_id");
+
+  if (activeError) {
+    console.error("Refrigerator active lookup failed:", activeError);
+    fridgeCards = [];
+    fridgeLogs = {};
+    return;
+  }
+
+  const activeIds = new Set((activeRows || []).map(r => r.contact_id));
+
+  const { data, error } = await sb
+    .from("chisme_contacts")
+    .select("*")
+    .gt("lifetime_value", 0)
+    .or("do_not_pursue.is.null,do_not_pursue.eq.false")
+    .gte("hotlist_temperature", 0)
+    .lte("hotlist_temperature", 50)
+    .order("hotlist_temperature", { ascending:false })
+    .order("lifetime_value", { ascending:false })
+    .limit(1000);
+
+  if (error) {
+    console.error("Refrigerator load failed:", error);
+    fridgeCards = [];
+    fridgeLogs = {};
+    return;
+  }
+
+  fridgeCards = (data || []).filter(c =>
+    !activeIds.has(c.id)
+  );
+
+  if (fridgeIndex >= fridgeCards.length) fridgeIndex = 0;
+
+  const contactIds = fridgeCards.map(c => c.id).filter(Boolean);
+  fridgeLogs = {};
+
+  if (!contactIds.length) return;
+
+  const { data: logs, error: logError } = await sb
+    .from("chisme_journals")
+    .select("*")
+    .in("contact_id", contactIds)
+    .order("created_at", { ascending:false });
+
+  if (logError) {
+    console.warn("Chisme log lookup failed:", logError);
+    return;
+  }
+
+  for (const log of logs || []) {
+    if (!fridgeLogs[log.contact_id]) fridgeLogs[log.contact_id] = [];
+    fridgeLogs[log.contact_id].push(log);
+  }
 }
 
 async function loadProjectTasksForStove() {
@@ -321,10 +725,10 @@ function renderHot() {
 
   el.innerHTML = hotCards.map(c => `
     <div class="card hot">
-      <div class="banner">🌡 ${esc(c.lead_temperature || 0)}° LEAD</div>
+      <div class="banner">🌡 ${esc(c.hotlist_temperature ?? 0)}° LEAD</div>
       <div class="name">${esc(c.name || "Unknown")}</div>
 
-      <div class="field"><b>Temperature:</b> ${esc(c.lead_temperature || 0)}°</div>
+      <div class="field"><b>Temperature:</b> ${esc(c.hotlist_temperature ?? 0)}°</div>
       <div class="field"><b>Phone:</b> ${esc(c.phone || "No phone saved")}</div>
       <div class="field"><b>Next action:</b> ${esc(c.next_action || "None")}</div>
       <div class="field"><b>Last outcome / chisme:</b> ${esc(c.last_outcome || c.chisme_summary || "No chisme logged")}</div>
@@ -435,11 +839,109 @@ function renderStove() {
   }).join("");
 }
 
+
+function currentFridgeCustomer() {
+  return fridgeCards[fridgeIndex] || null;
+}
+
+function renderFridge() {
+  const el = document.getElementById("fridgeStack");
+  const c = currentFridgeCustomer();
+
+  if (!c) {
+    el.innerHTML = `
+      <div class="customer-fridge-card">
+        <div class="fridge-card-top">
+          <div class="fridge-name">Refrigerator empty</div>
+          <div class="fridge-temp">0°</div>
+        </div>
+        <div class="chisme-log">
+          <div class="chisme-log-title">Chisme log</div>
+          <div class="chisme-entry">No customers are currently queued.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const logs = fridgeLogs[c.id] || [];
+  const fallback = c.chisme_summary || c.notes || "";
+
+  const logHtml = logs.length
+    ? logs.map(log => {
+        const text = log.journal || log.entry || log.notes || log.title || "";
+        return `
+          <div class="chisme-entry">
+            ${log.created_at ? `<span class="chisme-date">${esc(formatDate(log.created_at))}</span>` : ""}
+            ${esc(text || "Chisme entry saved.")}
+          </div>
+        `;
+      }).join("")
+    : `
+      <div class="chisme-entry">
+        ${esc(fallback || "No chisme logged yet.")}
+      </div>
+    `;
+
+  el.innerHTML = `
+    <div class="customer-fridge-card">
+      <div class="fridge-card-top">
+        <div class="fridge-name">${esc(c.name || "Unknown")}</div>
+        <div class="fridge-temp">${esc(c.hotlist_temperature ?? 0)}°</div>
+      </div>
+
+      <div class="fridge-contact">
+        <div class="fridge-contact-row">
+          <b>Phone</b>
+          ${esc(c.phone || "No phone saved")}
+        </div>
+
+        <div class="fridge-contact-row">
+          <b>Email</b>
+          ${esc(c.email || "No email saved")}
+        </div>
+
+        <div class="fridge-contact-row">
+          <b>Address</b>
+          ${esc(c.address || "No address saved")}
+        </div>
+      </div>
+
+      <div class="chisme-log">
+        <div class="chisme-log-title">Chisme log</div>
+        ${logHtml}
+      </div>
+    </div>
+
+    <div class="fridge-nav">
+      <button onclick="previousFridgeCustomer()">◀ Previous</button>
+      <button onclick="nextFridgeCustomer()">Next ▶</button>
+    </div>
+
+    <div class="fridge-counter">
+      Customer ${fridgeIndex + 1} of ${fridgeCards.length}
+    </div>
+  `;
+}
+
+function previousFridgeCustomer() {
+  if (!fridgeCards.length) return;
+  fridgeIndex = (fridgeIndex - 1 + fridgeCards.length) % fridgeCards.length;
+  renderFridge();
+}
+
+function nextFridgeCustomer() {
+  if (!fridgeCards.length) return;
+  fridgeIndex = (fridgeIndex + 1) % fridgeCards.length;
+  renderFridge();
+}
+
 async function loadAll() {
-  await Promise.all([loadHot(), loadStove()]);
+  await Promise.all([loadHot(), loadStove(), loadFridge()]);
   await loadProjectTasksForStove();
   renderHot();
   renderStove();
+  renderFridge();
   setMode(mode);
 }
   
