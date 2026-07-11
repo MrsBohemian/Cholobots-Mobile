@@ -679,7 +679,6 @@ async function loadFridge() {
   const { data, error } = await sb
     .from("chisme_contacts")
     .select("*")
-    .gt("lifetime_value", 0)
     .or("do_not_pursue.is.null,do_not_pursue.eq.false")
     .gte("hotlist_temperature", 0)
     .lte("hotlist_temperature", 50)
@@ -939,23 +938,39 @@ async function returnCustomerToFridge(contactId, removeFromStove, button) {
   const originalText = button?.textContent || "🧊 Back to Fridge — 50°";
   if (button) {
     button.disabled = true;
-    button.textContent = "Moving to fridge...";
+    button.textContent = "Returning customer to fridge...";
   }
 
-  const { error: contactError } = await sb
+  // Ask Supabase to return the updated row. This prevents a false success
+  // message when an RLS policy or wrong ID causes zero rows to be updated.
+  const { data: updatedRows, error: contactError } = await sb
     .from("chisme_contacts")
     .update({
       hotlist_temperature: 50,
       do_not_pursue: false
     })
-    .eq("id", contactId);
+    .eq("id", contactId)
+    .select("id, hotlist_temperature, do_not_pursue");
 
-  if (contactError) {
-    console.error("Could not reset customer temperature:", contactError);
+  const updatedCustomer = updatedRows?.[0];
+  const updateVerified =
+    updatedCustomer &&
+    String(updatedCustomer.id) === String(contactId) &&
+    Number(updatedCustomer.hotlist_temperature) === 50 &&
+    updatedCustomer.do_not_pursue !== true;
+
+  if (contactError || !updateVerified) {
+    console.error("Customer was not reset to 50°:", contactError || {
+      contactId,
+      updatedRows
+    });
+
     if (button) {
       button.disabled = false;
-      button.textContent = "Could not move customer";
-      setTimeout(() => { button.textContent = originalText; }, 1800);
+      button.textContent = contactError
+        ? "Database rejected the change"
+        : "Customer was not updated";
+      setTimeout(() => { button.textContent = originalText; }, 2600);
     }
     return;
   }
@@ -976,14 +991,27 @@ async function returnCustomerToFridge(contactId, removeFromStove, button) {
     }
   }
 
+  // Remove the card immediately so the old list cannot remain visually stale.
+  hotCards = hotCards.filter(c => String(c.id) !== String(contactId));
+  stoveCards = stoveCards.filter(row => String(row.contact_id) !== String(contactId));
+  renderHot();
+  renderStove();
+
   await loadAll();
-  setMode("fridge");
 
   const movedIndex = fridgeCards.findIndex(c => String(c.id) === String(contactId));
-  if (movedIndex >= 0) {
-    fridgeIndex = movedIndex;
-    renderFridge();
+  if (movedIndex < 0) {
+    console.error("Customer saved at 50° but was not returned by the fridge query:", contactId);
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Saved at 50°, but not visible in fridge";
+    }
+    return;
   }
+
+  fridgeIndex = movedIndex;
+  renderFridge();
+  setMode("fridge");
 
   const shell = document.querySelector(".fridge-shell");
   if (shell) shell.scrollIntoView({ behavior:"smooth", block:"start" });
