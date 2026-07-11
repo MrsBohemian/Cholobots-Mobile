@@ -952,6 +952,10 @@ async function returnCustomerToFridge(contactId, removeFromStove, button) {
     .eq("id", contactId)
     .select("id, hotlist_temperature, do_not_pursue");
 
+  console.log("RESET DEBUG contactId:", contactId);
+  console.log("RESET DEBUG returned rows:", updatedRows);
+  console.log("RESET DEBUG error:", contactError);
+
   const updatedCustomer = updatedRows?.[0];
   const updateVerified =
     updatedCustomer &&
