@@ -581,7 +581,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function loadStove() {
-  const { data, error } = await sb
+  const { data: activeRows, error: activeError } = await sb
     .from("chisme_active")
     .select(`
       id,
@@ -589,22 +589,52 @@ async function loadStove() {
       active_reason,
       burner_position,
       next_followup_date,
-      active_owner,
-      chisme_contacts (*)
+      active_owner
     `)
     .order("burner_position", { ascending:true })
     .order("next_followup_date", { ascending:true });
 
-  console.log("STOVETOP DATA:", data);
-  console.log("STOVETOP ERROR:", error);
-
-  if (error) {
-    console.error("Stovetop load failed:", error);
+  if (activeError) {
+    console.error("Stovetop load failed:", activeError);
     stoveCards = [];
     return;
   }
 
-  stoveCards = data || [];
+  if (!activeRows?.length) {
+    stoveCards = [];
+    return;
+  }
+
+  const contactIds = activeRows
+    .map(row => row.contact_id)
+    .filter(Boolean);
+
+  const { data: contacts, error: contactsError } = await sb
+    .from("chisme_contacts")
+    .select("*")
+    .in("id", contactIds);
+
+  if (contactsError) {
+    console.error("Stovetop contact lookup failed:", contactsError);
+    stoveCards = activeRows.map(row => ({
+      ...row,
+      chisme_contacts: null
+    }));
+    return;
+  }
+
+  const contactsById = Object.fromEntries(
+    (contacts || []).map(contact => [
+      String(contact.id),
+      contact
+    ])
+  );
+
+  stoveCards = activeRows.map(row => ({
+    ...row,
+    chisme_contacts:
+      contactsById[String(row.contact_id)] || null
+  }));
 }
 
 let mode = "fridge";
@@ -665,8 +695,6 @@ async function loadHot() {
     .order("hotlist_temperature", { ascending:false })
     .order("next_followup_date", { ascending:true });
 
-  console.log("STOVETOP DATA:", data);
-
   if (error) {
     console.error("Hotlist load failed:", error);
     hotCards = [];
@@ -675,25 +703,6 @@ async function loadHot() {
 
   hotCards = (data || []).filter(c => !activeIds.has(c.id));
 }
-
-/* STOVETOP = active table joined to contact card */
-async function loadStove() {
-
-  const { data, error } = await sb
-    .from("chisme_active")
-    .select("*");
-
-  console.log("ACTIVE TABLE", data);
-  console.log("ACTIVE ERROR", error);
-
-  if (error) {
-    stoveCards = [];
-    return;
-  }
-
-  stoveCards = data || [];
-}
-
 
 function formatDate(value) {
   if (!value) return "";
