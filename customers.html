@@ -638,6 +638,8 @@ async function loadHot() {
     .order("hotlist_temperature", { ascending:false })
     .order("next_followup_date", { ascending:true });
 
+  console.log("STOVETOP DATA:", data);
+
   if (error) {
     console.error("Hotlist load failed:", error);
     hotCards = [];
