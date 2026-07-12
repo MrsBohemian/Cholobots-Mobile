@@ -580,6 +580,33 @@ const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+async function loadStove() {
+  const { data, error } = await sb
+    .from("chisme_active")
+    .select(`
+      id,
+      contact_id,
+      active_reason,
+      burner_position,
+      next_followup_date,
+      active_owner,
+      chisme_contacts (*)
+    `)
+    .order("burner_position", { ascending:true })
+    .order("next_followup_date", { ascending:true });
+
+  console.log("STOVETOP DATA:", data);
+  console.log("STOVETOP ERROR:", error);
+
+  if (error) {
+    console.error("Stovetop load failed:", error);
+    stoveCards = [];
+    return;
+  }
+
+  stoveCards = data || [];
+}
+
 let mode = "fridge";
 let hotCards = [];
 let stoveCards = [];
@@ -651,22 +678,15 @@ async function loadHot() {
 
 /* STOVETOP = active table joined to contact card */
 async function loadStove() {
+
   const { data, error } = await sb
     .from("chisme_active")
-    .select(`
-      id,
-      contact_id,
-      active_reason,
-      burner_position,
-      next_followup_date,
-      active_owner,
-      chisme_contacts (*)
-    `)
-    .order("burner_position", { ascending:true })
-    .order("next_followup_date", { ascending:true });
+    .select("*");
+
+  console.log("ACTIVE TABLE", data);
+  console.log("ACTIVE ERROR", error);
 
   if (error) {
-    console.error("Stovetop load failed:", error);
     stoveCards = [];
     return;
   }
