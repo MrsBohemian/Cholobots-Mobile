@@ -423,17 +423,6 @@ async function loadProgress(){
 
     let projectTasks = [];
 
-    if(activeContactIds.length){
-      const taskRes = await sb
-        .from("metiche_project_tasks")
-        .select("id,contact_id,project_name,task_text,completed,sort_order")
-        .in("contact_id",activeContactIds)
-        .order("sort_order");
-
-      if(taskRes.error) throw new Error(`Project tasks: ${taskRes.error.message}`);
-      projectTasks = taskRes.data || [];
-    }
-
     renderStovetop(activeRows,contactsById,projectTasks);
 
   }catch(error){
