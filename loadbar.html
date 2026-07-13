@@ -368,7 +368,7 @@ async function loadProgress(){
 
     if(activeContactIds.length){
       const contactRes = await sb
-        .from("chisme_contacts")
+        .from("chisme_dashboard_contacts")
         .select("id,name,phone")
         .in("id",activeContactIds);
 
@@ -380,7 +380,7 @@ async function loadProgress(){
     }
 
     const hotRes = await sb
-      .from("chisme_contacts")
+      .from("chisme_dashboard_contacts")
       .select("id,name,hotlist_temperature")
       .gte("hotlist_temperature",51)
       .lt("hotlist_temperature",100);
