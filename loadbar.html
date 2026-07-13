@@ -687,7 +687,6 @@ async function loadProgress() {
   try {
     const today = todayLocal();
 
-    // 1. Today's work comes directly from !mtoday's daily_tasks table.
     const dailyRes = await sb
       .from("daily_tasks")
       .select("id,task,completed,date,calendar_key,user_id,created_at")
@@ -695,10 +694,12 @@ async function loadProgress() {
       .or(`calendar_key.eq.${DAILY_CALENDAR_KEY},user_id.eq.${DAILY_CALENDAR_KEY}`)
       .order("created_at");
 
-    if (dailyRes.error) throw new Error(`Today's Work query failed: ${dailyRes.error.message}`);
+    if (dailyRes.error) {
+      throw new Error(`Today's Work query failed: ${dailyRes.error.message}`);
+    }
 
     const dailyTasks = dailyRes.data || [];
-    const dailyDone = dailyTasks.filter(t => Boolean(t.completed)).length;
+    const dailyDone = dailyTasks.filter(task => Boolean(task.completed)).length;
 
     document.getElementById("todayOwnerLabel").textContent =
       `Completed tasks from ${DAILY_USER_NAME}'s current !mtoday list`;
@@ -708,10 +709,11 @@ async function loadProgress() {
       dailyDone,
       dailyTasks.length,
       `${pct(dailyDone, dailyTasks.length)}% complete`,
-      dailyTasks.length ? `${dailyTasks.length - dailyDone} remaining` : "No tasks visible"
+      dailyTasks.length
+        ? `${dailyTasks.length - dailyDone} remaining`
+        : "No tasks visible"
     );
 
-    // 2. Current stovetop customers.
     const activeRes = await sb
       .from("chisme_active")
       .select(`
@@ -727,26 +729,32 @@ async function loadProgress() {
       `)
       .order("burner_position");
 
-    if (activeRes.error) throw new Error(`Stovetop query failed: ${activeRes.error.message}`);
+    if (activeRes.error) {
+      throw new Error(`Stovetop query failed: ${activeRes.error.message}`);
+    }
 
     const activeRows = activeRes.data || [];
-    const activeIds = new Set(activeRows.map(r => r.contact_id).filter(Boolean));
+    const activeIds = new Set(
+      activeRows.map(row => row.contact_id).filter(Boolean)
+    );
 
-    // 3. Current Hot List = 51-99 degrees, excluding anyone already on the stovetop.
     const hotRes = await sb
       .from("chisme_contacts")
       .select("id,name,hotlist_temperature,hotlist_stage,next_action")
       .gte("hotlist_temperature", 51)
       .lt("hotlist_temperature", 100)
-      .order("hotlist_temperature", { ascending:false });
+      .order("hotlist_temperature", { ascending: false });
 
-    if (hotRes.error) throw new Error(`Hot List query failed: ${hotRes.error.message}`);
+    if (hotRes.error) {
+      throw new Error(`Hot List query failed: ${hotRes.error.message}`);
+    }
 
-    const hotCustomers = (hotRes.data || []).filter(c => !activeIds.has(c.id));
-    const hotIds = hotCustomers.map(c => c.id);
+    const hotCustomers = (hotRes.data || []).filter(
+      customer => !activeIds.has(customer.id)
+    );
 
-    // 4. Movement today = distinct current Hot List customers with a qualifying note today.
-    let movedIds = new Set();
+    const hotIds = hotCustomers.map(customer => customer.id);
+    const movedIds = new Set();
 
     if (hotIds.length) {
       const notesRes = await sb
@@ -755,7 +763,11 @@ async function loadProgress() {
         .eq("note_date", today)
         .in("contact_id", hotIds);
 
-      if (notesRes.error) throw new Error(`Customer movement query failed: ${notesRes.error.message}`);
+      if (notesRes.error) {
+        throw new Error(
+          `Customer movement query failed: ${notesRes.error.message}`
+        );
+      }
 
       for (const note of notesRes.data || []) {
         if (HOTLIST_NOTE_TYPES.has(note.note_type)) {
@@ -769,11 +781,15 @@ async function loadProgress() {
       movedIds.size,
       hotCustomers.length,
       `${pct(movedIds.size, hotCustomers.length)}% moved today`,
-      hotCustomers.length ? `${hotCustomers.length - movedIds.size} still waiting` : "No current hot leads"
+      hotCustomers.length
+        ? `${hotCustomers.length - movedIds.size} still waiting`
+        : "No current hot leads"
     );
 
-    // 5. Stovetop punch-list progress from metiche_project_tasks.
-    const activeContactIds = activeRows.map(r => r.contact_id).filter(Boolean);
+    const activeContactIds = activeRows
+      .map(row => row.contact_id)
+      .filter(Boolean);
+
     let projectTasks = [];
 
     if (activeContactIds.length) {
@@ -783,19 +799,23 @@ async function loadProgress() {
         .in("contact_id", activeContactIds)
         .order("sort_order");
 
-      if (tasksRes.error) throw new Error(`Project task query failed: ${tasksRes.error.message}`);
+      if (tasksRes.error) {
+        throw new Error(`Project task query failed: ${tasksRes.error.message}`);
+      }
+
       projectTasks = tasksRes.data || [];
     }
 
     renderStovetop(activeRows, projectTasks);
 
-    } catch (error) {
-      console.error(error);
-      showError(
-        "Live data could not be loaded.\n\n" +
-        (error?.message || String(error))
-      );
-    }
+  } catch (error) {
+    console.error("Loadbar failed:", error);
+
+    showError(
+      "Live data could not be loaded.\n\n" +
+      (error?.message || String(error))
+    );
+  }
 }
 
 updateClock();
@@ -804,5 +824,3 @@ setInterval(updateClock, 1000);
 loadProgress();
 setInterval(loadProgress, 60000);
 </script>
-</body>
-</html>
