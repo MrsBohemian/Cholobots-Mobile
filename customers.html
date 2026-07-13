@@ -610,7 +610,7 @@ async function loadStove() {
     .filter(Boolean);
 
   const { data: contacts, error: contactsError } = await sb
-    .from("chisme_contacts")
+    .from("chisme_dashboard_contacts")
     .select("*")
     .in("id", contactIds);
 
@@ -688,7 +688,7 @@ async function loadHot() {
   const activeIds = new Set((activeRows || []).map(r => r.contact_id));
 
   const { data, error } = await sb
-    .from("chisme_contacts")
+    .from("chisme_dashboard_contacts")
     .select("*")
     .gte("hotlist_temperature", 51)
     .or("do_not_pursue.is.null,do_not_pursue.eq.false")
@@ -731,7 +731,7 @@ async function loadFridge() {
   const activeIds = new Set((activeRows || []).map(r => r.contact_id));
 
   const { data, error } = await sb
-    .from("chisme_contacts")
+    .from("chisme_dashboard_contacts")
     .select("*")
     .or("do_not_pursue.is.null,do_not_pursue.eq.false")
     .gte("hotlist_temperature", 0)
@@ -1016,7 +1016,7 @@ async function returnCustomerToFridge(contactId, removeFromStove, button) {
   // Ask Supabase to return the updated row. This prevents a false success
   // message when an RLS policy or wrong ID causes zero rows to be updated.
   const { data: updatedRows, error: contactError } = await sb
-    .from("chisme_contacts")
+    .from("chisme_dashboard_contacts")
     .update({
       hotlist_temperature: 50,
       do_not_pursue: false
@@ -1230,7 +1230,7 @@ async function saveCustomerTemperature(c, temperature, doNotPursue) {
   }
 
   const { error } = await sb
-    .from("chisme_contacts")
+    .from("chisme_dashboard_contacts")
     .update(changes)
     .eq("id", c.id);
 
