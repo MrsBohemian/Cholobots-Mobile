@@ -1,466 +1,138 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Task Progress</title>
 
 <style>
-:root {
-  --bg:#070504;
-  --wood:#7a421f;
-  --wood-dark:#3b1c0d;
-  --panel:#111318;
-  --panel2:#090b0f;
-  --border:#3b2a1d;
-  --steel:#9d9688;
-  --orange:#ff8a00;
-  --yellow:#ffd36a;
-  --cyan:#68e7ff;
-  --green:#8dff76;
-  --pink:#ff66c4;
-  --text:#f4eadc;
-  --muted:#b9a98d;
-  --danger:#ff6767;
+:root{
+  --bg:#070504;--wood:#7a421f;--wood-dark:#3b1c0d;--steel:#9d9688;
+  --orange:#ff8a00;--yellow:#ffd36a;--cyan:#68e7ff;--pink:#ff66c4;
+  --text:#f4eadc;--muted:#b9a98d
 }
-
-* { box-sizing:border-box; }
-
-body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial, Helvetica, sans-serif;
-}
-
-.app {
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.app{
   min-height:100vh;
   background:
-    linear-gradient(90deg, rgba(0,0,0,.35), transparent 18%, transparent 82%, rgba(0,0,0,.35)),
-    repeating-linear-gradient(
-      0deg,
-      var(--wood) 0px,
-      var(--wood) 18px,
-      var(--wood-dark) 19px,
-      var(--wood-dark) 22px
-    );
-  padding:14px 10px 28px;
+    linear-gradient(90deg,rgba(0,0,0,.35),transparent 18%,transparent 82%,rgba(0,0,0,.35)),
+    repeating-linear-gradient(0deg,var(--wood) 0,var(--wood) 18px,var(--wood-dark) 19px,var(--wood-dark) 22px);
+  padding:14px 10px 28px
 }
-
-.header {
-  text-align:center;
-  background:#1a1008;
-  border:4px solid #2b1609;
-  box-shadow:0 0 0 3px #000;
-  padding:14px 8px;
-  margin-bottom:14px;
+.header{
+  text-align:center;background:#1a1008;border:4px solid #2b1609;
+  box-shadow:0 0 0 3px #000;padding:14px 8px;margin-bottom:14px
 }
-
-.header h1 {
-  margin:0;
-  font-size:26px;
-  letter-spacing:.08em;
-  color:var(--yellow);
-  text-shadow:3px 3px #000;
+.header h1{margin:0;font-size:26px;letter-spacing:.08em;color:var(--yellow);text-shadow:3px 3px #000}
+.header p{margin:5px 0 0;font-size:12px;color:var(--muted)}
+.status{
+  display:none;margin:0 0 14px;padding:10px 12px;background:#1a0909;
+  border:3px solid #5b1f1f;color:#ffd2d2;box-shadow:3px 3px #000;
+  font-size:13px;white-space:pre-wrap
 }
-
-.header p {
-  margin:5px 0 0;
-  font-size:12px;
-  color:var(--muted);
+.load-section{
+  background:rgba(8,8,8,.88);border:4px solid #241409;
+  box-shadow:0 0 0 3px #000;padding:12px;margin-bottom:18px
 }
-
-.status {
-  display:none;
-  margin:0 0 14px;
-  padding:10px 12px;
-  background:#1a0909;
-  border:3px solid #5b1f1f;
-  color:#ffd2d2;
-  box-shadow:3px 3px #000;
-  font-size:13px;
-  white-space:pre-wrap;
+.load-card{
+  position:relative;overflow:hidden;background:linear-gradient(180deg,#171a20,#0b0d11);
+  border:3px solid #343942;box-shadow:inset 0 0 0 2px #000,0 0 18px rgba(0,0,0,.65);
+  padding:13px;margin-bottom:12px
 }
-
-.load-section {
-  background:rgba(8,8,8,.88);
-  border:4px solid #241409;
-  box-shadow:0 0 0 3px #000;
-  padding:12px;
-  margin-bottom:18px;
+.load-card:last-child{margin-bottom:0}
+.load-card.today{border-color:#315f6a}
+.load-card.hot{border-color:#6b3b5c}
+.load-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+.load-title{font-weight:900;font-size:18px;letter-spacing:.08em;color:#fff;text-shadow:2px 2px #000}
+.load-count{font-size:24px;font-weight:900;color:var(--yellow);white-space:nowrap;text-shadow:2px 2px #000}
+.load-sub{color:var(--muted);font-size:13px;margin-bottom:9px}
+.dashboard-bar{
+  height:24px;background:#020304;border:3px solid #414650;
+  box-shadow:inset 0 0 0 2px #000,inset 0 0 10px rgba(0,0,0,.9);
+  overflow:hidden;position:relative
 }
-
-.load-card {
-  position:relative;
-  overflow:hidden;
-  background:linear-gradient(180deg,#171a20,#0b0d11);
-  border:3px solid #343942;
-  box-shadow:
-    inset 0 0 0 2px #000,
-    0 0 18px rgba(0,0,0,.65);
-  padding:13px;
-  margin-bottom:12px;
+.dashboard-bar::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(0,0,0,.48) 18px 21px);
+  pointer-events:none
 }
-
-.load-card:last-child { margin-bottom:0; }
-
-.load-card::before {
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:
-    linear-gradient(120deg, transparent 0 35%, rgba(255,255,255,.04) 46%, transparent 58%);
+.dashboard-fill{height:100%;width:0;transition:width .4s ease}
+.today .dashboard-fill{background:linear-gradient(90deg,#16a8c7,#73efff,#a8fff1);box-shadow:0 0 18px rgba(104,231,255,.85)}
+.hot .dashboard-fill{
+  background:repeating-linear-gradient(135deg,#e7439f 0 10px,#ff7fd0 10px 20px);
+  box-shadow:0 0 18px rgba(255,102,196,.85)
 }
-
-.load-card.today {
-  border-color:#315f6a;
+.percent-line{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.stove-wrap{
+  margin-top:20px;background:linear-gradient(135deg,var(--wood),var(--wood-dark));
+  border:5px solid #2b1609;box-shadow:0 0 0 4px #000;padding:12px
 }
-
-.load-card.hot {
-  border-color:#6b3b5c;
+.cabinet-top{
+  height:52px;background:repeating-linear-gradient(0deg,#8c4b22 0 10px,#653116 11px 14px);
+  border:4px solid #33190b;display:flex;align-items:center;justify-content:center;margin-bottom:12px
 }
-
-.load-top {
-  display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  gap:10px;
-  margin-bottom:7px;
+.drawer-pull{width:90px;height:12px;background:#d6b15b;border:3px solid #5c3d13;box-shadow:3px 3px #000}
+.range{background:var(--steel);border:5px solid #4c4943;box-shadow:inset 0 0 0 3px #d6d0c4;padding:10px}
+.stove-back{background:#050505;border:4px solid #333;padding:12px;text-align:center;margin-bottom:10px}
+.time{color:#72dfff;font-family:monospace;font-size:22px;font-weight:900}
+.label{color:var(--muted);font-size:11px;letter-spacing:.18em}
+.knobs{display:flex;justify-content:space-around;background:#c6beb0;border:4px solid #6f6b64;padding:8px;margin-bottom:10px}
+.knob{width:28px;height:28px;background:#e8dec7;border:5px solid #4a463d;border-radius:50%;box-shadow:2px 2px #000}
+.cooktop{background:#050505;border:5px solid #222;padding:14px}
+.cooktop h2{margin:0 0 12px;text-align:center;color:var(--orange);letter-spacing:.14em;text-shadow:2px 2px #000}
+.job{margin:14px 0;padding:10px;background:linear-gradient(180deg,#15100d,#090706);border:2px solid #3e2b1e;box-shadow:inset 0 0 0 2px #000}
+.job-row{display:flex;justify-content:space-between;gap:8px;font-weight:900;margin-bottom:5px}
+.job-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.percent{color:var(--yellow);white-space:nowrap}
+.task-count{color:var(--muted);font-size:12px;margin-bottom:8px}
+.heat-track{
+  height:24px;background:#120504;border:4px solid #4a1d12;
+  box-shadow:inset 0 0 0 2px #000,inset 0 0 14px rgba(0,0,0,.9);
+  overflow:hidden;position:relative
 }
-
-.load-title {
-  font-weight:900;
-  font-size:18px;
-  letter-spacing:.08em;
-  color:#fff;
-  text-shadow:2px 2px #000;
+.heat-track::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 13px,rgba(0,0,0,.72) 13px 17px);
+  pointer-events:none
 }
-
-.load-count {
-  font-size:24px;
-  font-weight:900;
-  color:var(--yellow);
-  white-space:nowrap;
-  text-shadow:2px 2px #000;
+.heat-fill{
+  height:100%;width:0;
+  background:linear-gradient(180deg,#ffe0a3 0,#ff9d2f 28%,#ff4d00 58%,#a80f00 100%);
+  box-shadow:0 0 8px #ff6a00,0 0 18px rgba(255,74,0,.9),inset 0 2px 3px rgba(255,255,255,.65);
+  transition:width .45s ease
 }
-
-.load-sub {
-  color:var(--muted);
-  font-size:13px;
-  margin-bottom:9px;
+.empty-stove{color:var(--muted);text-align:center;padding:20px 10px;border:2px dashed #4b3424}
+.oven-door{height:120px;background:#050505;border:6px solid #67635b;margin-top:12px;position:relative}
+.handle{position:absolute;top:-18px;left:10%;right:10%;height:18px;background:#d8d0c2;border:3px solid #4c4943}
+.towel{
+  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:70px;height:80px;
+  background:repeating-linear-gradient(90deg,#9e211a 0 10px,#c63a2c 10px 20px);
+  border:3px solid #4a0905
 }
-
-.dashboard-bar {
-  height:24px;
-  background:#020304;
-  border:3px solid #414650;
-  box-shadow:
-    inset 0 0 0 2px #000,
-    inset 0 0 10px rgba(0,0,0,.9);
-  overflow:hidden;
-  position:relative;
-}
-
-.dashboard-bar::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:repeating-linear-gradient(
-    90deg,
-    transparent 0 18px,
-    rgba(0,0,0,.48) 18px 21px
-  );
-  pointer-events:none;
-}
-
-.dashboard-fill {
-  height:100%;
-  width:0%;
-  transition:width .4s ease;
-}
-
-.today .dashboard-fill {
-  background:linear-gradient(90deg,#16a8c7,#73efff,#a8fff1);
-  box-shadow:0 0 18px rgba(104,231,255,.85);
-}
-
-.hot .dashboard-fill {
-  background:
-    repeating-linear-gradient(
-      135deg,
-      #e7439f 0 10px,
-      #ff7fd0 10px 20px
-    );
-  box-shadow:0 0 18px rgba(255,102,196,.85);
-  animation:pulseGlow 1.8s ease-in-out infinite alternate;
-}
-
-@keyframes pulseGlow {
-  from { filter:brightness(.9); }
-  to { filter:brightness(1.2); }
-}
-
-.percent-line {
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  color:var(--muted);
-  margin-top:6px;
-}
-
-.stove-wrap {
-  margin-top:20px;
-  background:linear-gradient(135deg, var(--wood), var(--wood-dark));
-  border:5px solid #2b1609;
-  box-shadow:0 0 0 4px #000;
-  padding:12px;
-}
-
-.cabinet-top {
-  height:52px;
-  background:repeating-linear-gradient(
-    0deg,
-    #8c4b22 0px,
-    #8c4b22 10px,
-    #653116 11px,
-    #653116 14px
-  );
-  border:4px solid #33190b;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:12px;
-}
-
-.drawer-pull {
-  width:90px;
-  height:12px;
-  background:#d6b15b;
-  border:3px solid #5c3d13;
-  box-shadow:3px 3px #000;
-}
-
-.range {
-  background:var(--steel);
-  border:5px solid #4c4943;
-  box-shadow:inset 0 0 0 3px #d6d0c4;
-  padding:10px;
-}
-
-.stove-back {
-  background:#050505;
-  border:4px solid #333;
-  padding:12px;
-  text-align:center;
-  margin-bottom:10px;
-}
-
-.time {
-  color:#72dfff;
-  font-family:monospace;
-  font-size:22px;
-  font-weight:900;
-}
-
-.label {
-  color:var(--muted);
-  font-size:11px;
-  letter-spacing:.18em;
-}
-
-.knobs {
-  display:flex;
-  justify-content:space-around;
-  background:#c6beb0;
-  border:4px solid #6f6b64;
-  padding:8px;
-  margin-bottom:10px;
-}
-
-.knob {
-  width:28px;
-  height:28px;
-  background:#e8dec7;
-  border:5px solid #4a463d;
-  border-radius:50%;
-  box-shadow:2px 2px #000;
-}
-
-.cooktop {
-  background:#050505;
-  border:5px solid #222;
-  padding:14px;
-}
-
-.cooktop h2 {
-  margin:0 0 12px;
-  text-align:center;
-  color:var(--orange);
-  letter-spacing:.14em;
-  text-shadow:2px 2px #000;
-}
-
-.job {
-  margin:14px 0;
-  padding:10px;
-  background:linear-gradient(180deg,#15100d,#090706);
-  border:2px solid #3e2b1e;
-  box-shadow:inset 0 0 0 2px #000;
-}
-
-.job-row {
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  font-weight:900;
-  margin-bottom:5px;
-}
-
-.job-name {
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.percent {
-  color:var(--yellow);
-  white-space:nowrap;
-}
-
-.task-count {
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:8px;
-}
-
-.heat-track {
-  height:24px;
-  background:#120504;
-  border:4px solid #4a1d12;
-  box-shadow:
-    inset 0 0 0 2px #000,
-    inset 0 0 14px rgba(0,0,0,.9);
-  overflow:hidden;
-  position:relative;
-}
-
-.heat-track::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 13px,
-      rgba(0,0,0,.72) 13px 17px
-    );
-  pointer-events:none;
-}
-
-.heat-fill {
-  height:100%;
-  width:0%;
-  background:
-    linear-gradient(180deg,#ffe0a3 0%,#ff9d2f 28%,#ff4d00 58%,#a80f00 100%);
-  box-shadow:
-    0 0 8px #ff6a00,
-    0 0 18px rgba(255,74,0,.9),
-    inset 0 2px 3px rgba(255,255,255,.65);
-  transition:width .45s ease;
-  animation:heatFlicker 1.3s ease-in-out infinite alternate;
-}
-
-@keyframes heatFlicker {
-  from { filter:brightness(.88); }
-  to { filter:brightness(1.18); }
-}
-
-.empty-stove {
-  color:var(--muted);
-  text-align:center;
-  padding:20px 10px;
-  border:2px dashed #4b3424;
-}
-
-.oven-door {
-  height:120px;
-  background:#050505;
-  border:6px solid #67635b;
-  margin-top:12px;
-  position:relative;
-}
-
-.handle {
-  position:absolute;
-  top:-18px;
-  left:10%;
-  right:10%;
-  height:18px;
-  background:#d8d0c2;
-  border:3px solid #4c4943;
-}
-
-.towel {
-  position:absolute;
-  top:-8px;
-  left:50%;
-  transform:translateX(-50%);
-  width:70px;
-  height:80px;
-  background:repeating-linear-gradient(
-    90deg,
-    #9e211a 0px,
-    #9e211a 10px,
-    #c63a2c 10px,
-    #c63a2c 20px
-  );
-  border:3px solid #4a0905;
-}
-
-.note {
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-  margin:12px 0 0;
-}
-
-.footer {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:14px;
-}
-
-button {
-  background:#111;
-  color:var(--text);
-  border:4px solid #333;
-  padding:12px;
-  font-weight:900;
-  box-shadow:3px 3px #000;
-}
+.note{text-align:center;color:var(--muted);font-size:12px;margin:12px 0 0}
+.footer{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{background:#111;color:var(--text);border:4px solid #333;padding:12px;font-weight:900;box-shadow:3px 3px #000}
 </style>
 </head>
 
 <body>
 <div class="app">
-
   <header class="header">
     <h1>TASK PROGRESS</h1>
     <p>Handley Man Cholobots</p>
   </header>
 
   <div id="status" class="status"></div>
-  
-  <section class="load-section">
 
+  <section class="load-section">
     <div class="load-card today" id="todayCard">
       <div class="load-top">
         <div class="load-title">TODAY'S WORK</div>
         <div class="load-count">— / —</div>
       </div>
-      <div class="load-sub"><span id="todayOwnerLabel">Completed tasks from the current user's !mtoday list</span></div>
+      <div class="load-sub" id="todayOwnerLabel">Completed tasks from the current user's !mtoday list</div>
       <div class="dashboard-bar"><div class="dashboard-fill"></div></div>
       <div class="percent-line"><span>Loading…</span><span>daily_tasks</span></div>
     </div>
@@ -474,12 +146,10 @@ button {
       <div class="dashboard-bar"><div class="dashboard-fill"></div></div>
       <div class="percent-line"><span>Loading…</span><span>current Hot List</span></div>
     </div>
-
   </section>
 
   <section class="stove-wrap">
     <div class="cabinet-top"><div class="drawer-pull"></div></div>
-
     <div class="range">
       <div class="stove-back">
         <div class="time" id="clock">--:--</div>
@@ -487,10 +157,7 @@ button {
       </div>
 
       <div class="knobs">
-        <div class="knob"></div>
-        <div class="knob"></div>
-        <div class="knob"></div>
-        <div class="knob"></div>
+        <div class="knob"></div><div class="knob"></div><div class="knob"></div><div class="knob"></div>
       </div>
 
       <div class="cooktop" id="cooktop">
@@ -511,46 +178,50 @@ button {
     <button onclick="history.back()">← BACK</button>
     <button onclick="loadProgress()">↻ REFRESH</button>
   </div>
-
 </div>
+
+<script>
+(function startClock(){
+  const clock = document.getElementById("clock");
+  function tick(){
+    clock.textContent = new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  }
+  tick();
+  setInterval(tick,1000);
+})();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const USER_DIRECTORY = {
-  heaven: "Heaven",
-  daniel: "Daniel",
-  jesse: "Jesse",
-  samuel: "Samuel",
-  handley_man: "Handley Man"
+  heaven:"Heaven",
+  daniel:"Daniel",
+  jesse:"Jesse",
+  samuel:"Samuel",
+  handley_man:"Handley Man"
 };
 
-function normalizeUserKey(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replaceAll(" ", "_");
+function normalizeUserKey(value){
+  return String(value || "").trim().toLowerCase().replaceAll(" ","_");
 }
 
-function resolveCurrentUser() {
+function resolveCurrentUser(){
   const params = new URLSearchParams(location.search);
   const candidates = [
     params.get("user"),
     params.get("calendar_key"),
     localStorage.getItem("cholobots_user"),
     localStorage.getItem("current_user"),
-    localStorage.getItem("currentUser"),
-    sessionStorage.getItem("cholobots_user"),
-    sessionStorage.getItem("current_user")
+    localStorage.getItem("currentUser")
   ];
 
-  for (const candidate of candidates) {
+  for(const candidate of candidates){
     const key = normalizeUserKey(candidate);
-    if (USER_DIRECTORY[key]) return key;
+    if(USER_DIRECTORY[key]) return key;
   }
   return "heaven";
 }
@@ -558,221 +229,187 @@ function resolveCurrentUser() {
 const DAILY_CALENDAR_KEY = resolveCurrentUser();
 const DAILY_USER_NAME = USER_DIRECTORY[DAILY_CALENDAR_KEY] || DAILY_CALENDAR_KEY;
 
-const HOTLIST_NOTE_TYPES = new Set([
-  "hotlist_progress",
-  "site_visit_notes",
-  "estimate_notes",
-  "chisme",
-  "rolodex_update"
-]);
-
-function todayLocal() {
+function todayLocal(){
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return [
+    d.getFullYear(),
+    String(d.getMonth()+1).padStart(2,"0"),
+    String(d.getDate()).padStart(2,"0")
+  ].join("-");
 }
 
-function esc(value) {
+function pct(done,total){
+  return total ? Math.min(100,Math.round((done/total)*100)) : 0;
+}
+
+function esc(value){
   return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function pct(done, total) {
-  if (!total) return 0;
-  return Math.min(100, Math.round((done / total) * 100));
+function showError(message){
+  const box = document.getElementById("status");
+  box.style.display = "block";
+  box.textContent = message;
 }
 
-function showError(message) {
-  const el = document.getElementById("status");
-  el.style.display = "block";
-  el.textContent = message;
+function clearError(){
+  const box = document.getElementById("status");
+  box.style.display = "none";
+  box.textContent = "";
 }
 
-function clearError() {
-  const el = document.getElementById("status");
-  el.style.display = "none";
-  el.textContent = "";
-}
-
-function setDashboardCard(cardId, done, total, leftText, rightText) {
+function setDashboardCard(cardId,done,total,leftText,rightText){
   const card = document.getElementById(cardId);
-  if (!card) return;
-
-  const percent = pct(done, total);
+  const percent = pct(done,total);
   card.querySelector(".load-count").textContent = `${done} / ${total}`;
   card.querySelector(".dashboard-fill").style.width = `${percent}%`;
-
   const labels = card.querySelectorAll(".percent-line span");
-  if (labels[0]) labels[0].textContent = leftText || `${percent}%`;
-  if (labels[1]) labels[1].textContent = rightText || "";
+  labels[0].textContent = leftText;
+  labels[1].textContent = rightText;
 }
 
-function updateClock() {
-  const el = document.getElementById("clock");
-  const now = new Date();
-  el.textContent = now.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit"
-  });
-}
-
-function groupTasksByContact(tasks) {
+function groupByContact(tasks){
   const grouped = {};
-  for (const task of tasks || []) {
-    const contactId = task.contact_id;
-    if (!contactId) continue;
-    if (!grouped[contactId]) grouped[contactId] = [];
-    grouped[contactId].push(task);
+  for(const task of tasks){
+    if(!grouped[task.contact_id]) grouped[task.contact_id] = [];
+    grouped[task.contact_id].push(task);
   }
   return grouped;
 }
 
-function renderStovetop(activeRows, tasks) {
+function renderStovetop(activeRows,contactsById,projectTasks){
   const cooktop = document.getElementById("cooktop");
-  const tasksByContact = groupTasksByContact(tasks);
+  const tasksByContact = groupByContact(projectTasks);
 
-  const rows = [...activeRows].sort(
-    (a, b) => Number(a.burner_position || 99) - Number(b.burner_position || 99)
-  );
-
-  if (!rows.length) {
-    cooktop.innerHTML = `
-      <h2>🔥 STOVETOP 🔥</h2>
-      <div class="empty-stove">No active projects on the stovetop.</div>
-    `;
-    document.getElementById("note").textContent =
-      "No active customers are currently assigned to a burner.";
+  if(!activeRows.length){
+    cooktop.innerHTML = `<h2>🔥 STOVETOP 🔥</h2><div class="empty-stove">No active projects on the stovetop.</div>`;
+    document.getElementById("note").textContent = "No active customers are currently assigned to a burner.";
     return;
   }
 
-  const jobs = rows.map(row => {
-    const contact = row.chisme_contacts || {};
-    const contactTasks = tasksByContact[row.contact_id] || [];
-    const done = contactTasks.filter(t => Boolean(t.completed)).length;
-    const total = contactTasks.length;
-    const percent = pct(done, total);
-    const burner = row.burner_position || "?";
-    const name = contact.name || "Unknown customer";
+  const jobs = [...activeRows]
+    .sort((a,b)=>Number(a.burner_position||99)-Number(b.burner_position||99))
+    .map(row=>{
+      const contact = contactsById[row.contact_id] || {};
+      const tasks = tasksByContact[row.contact_id] || [];
+      const done = tasks.filter(t=>Boolean(t.completed)).length;
+      const total = tasks.length;
+      const percent = pct(done,total);
 
-    return `
-      <div class="job">
-        <div class="job-row">
-          <span class="job-name">Burner ${esc(burner)} — ${esc(name)}</span>
-          <span class="percent">${percent}%</span>
+      return `
+        <div class="job">
+          <div class="job-row">
+            <span class="job-name">Burner ${esc(row.burner_position || "?")} — ${esc(contact.name || "Unknown customer")}</span>
+            <span class="percent">${percent}%</span>
+          </div>
+          <div class="task-count">${done} / ${total} punch-list tasks complete</div>
+          <div class="heat-track"><div class="heat-fill" style="width:${percent}%"></div></div>
         </div>
-        <div class="task-count">${done} / ${total} punch-list tasks complete</div>
-        <div class="heat-track">
-          <div class="heat-fill" style="width:${percent}%"></div>
-        </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    }).join("");
 
   cooktop.innerHTML = `<h2>🔥 STOVETOP 🔥</h2>${jobs}`;
-
-  const completed = tasks.filter(t => Boolean(t.completed)).length;
+  const completed = projectTasks.filter(t=>Boolean(t.completed)).length;
   document.getElementById("note").textContent =
-    `Live stovetop progress: ${completed}/${tasks.length} punch-list tasks complete.`;
+    `Live stovetop progress: ${completed}/${projectTasks.length} punch-list tasks complete.`;
 }
 
-async function loadProgress() {
+async function loadProgress(){
   clearError();
 
-  try {
-    const today = todayLocal();
-
-    const dailyRes = await sb
-      .from("daily_tasks")
-      .select("id,task,completed,date,calendar_key,user_id,created_at")
-      .eq("date", today)
-      .or(`calendar_key.eq.${DAILY_CALENDAR_KEY},user_id.eq.${DAILY_CALENDAR_KEY}`)
-      .order("created_at");
-
-    if (dailyRes.error) {
-      throw new Error(`Today's Work query failed: ${dailyRes.error.message}`);
+  try{
+    if(!window.supabase){
+      throw new Error("Supabase library did not load.");
     }
 
-    const dailyTasks = dailyRes.data || [];
-    const dailyDone = dailyTasks.filter(task => Boolean(task.completed)).length;
+    const sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const today = todayLocal();
 
     document.getElementById("todayOwnerLabel").textContent =
       `Completed tasks from ${DAILY_USER_NAME}'s current !mtoday list`;
+
+    const dailyRes = await sb
+      .from("daily_tasks")
+      .select("id,task,completed,date,calendar_key,created_at")
+      .eq("date",today)
+      .eq("calendar_key",DAILY_CALENDAR_KEY)
+      .order("created_at");
+
+    if(dailyRes.error) throw new Error(`Today's Work: ${dailyRes.error.message}`);
+
+    const dailyTasks = dailyRes.data || [];
+    const dailyDone = dailyTasks.filter(t=>Boolean(t.completed)).length;
 
     setDashboardCard(
       "todayCard",
       dailyDone,
       dailyTasks.length,
-      `${pct(dailyDone, dailyTasks.length)}% complete`,
-      dailyTasks.length
-        ? `${dailyTasks.length - dailyDone} remaining`
-        : "No tasks visible"
+      `${pct(dailyDone,dailyTasks.length)}% complete`,
+      dailyTasks.length ? `${dailyTasks.length-dailyDone} remaining` : "No tasks visible"
     );
 
     const activeRes = await sb
       .from("chisme_active")
-      .select(`
-        id,
-        contact_id,
-        burner_position,
-        active_reason,
-        chisme_contacts (
-          id,
-          name,
-          phone
-        )
-      `)
+      .select("id,contact_id,burner_position,active_reason")
       .order("burner_position");
 
-    if (activeRes.error) {
-      throw new Error(`Stovetop query failed: ${activeRes.error.message}`);
-    }
+    if(activeRes.error) throw new Error(`Stovetop: ${activeRes.error.message}`);
 
     const activeRows = activeRes.data || [];
-    const activeIds = new Set(
-      activeRows.map(row => row.contact_id).filter(Boolean)
-    );
+    const activeIds = new Set(activeRows.map(r=>r.contact_id).filter(Boolean));
+
+    let contactsById = {};
+    const activeContactIds = [...activeIds];
+
+    if(activeContactIds.length){
+      const contactRes = await sb
+        .from("chisme_contacts")
+        .select("id,name,phone")
+        .in("id",activeContactIds);
+
+      if(contactRes.error) throw new Error(`Stovetop contacts: ${contactRes.error.message}`);
+
+      for(const contact of contactRes.data || []){
+        contactsById[contact.id] = contact;
+      }
+    }
 
     const hotRes = await sb
       .from("chisme_contacts")
-      .select("id,name,hotlist_temperature,hotlist_stage,next_action")
-      .gte("hotlist_temperature", 51)
-      .lt("hotlist_temperature", 100)
-      .order("hotlist_temperature", { ascending: false });
+      .select("id,name,hotlist_temperature")
+      .gte("hotlist_temperature",51)
+      .lt("hotlist_temperature",100);
 
-    if (hotRes.error) {
-      throw new Error(`Hot List query failed: ${hotRes.error.message}`);
-    }
+    if(hotRes.error) throw new Error(`Hot List: ${hotRes.error.message}`);
 
-    const hotCustomers = (hotRes.data || []).filter(
-      customer => !activeIds.has(customer.id)
-    );
-
-    const hotIds = hotCustomers.map(customer => customer.id);
+    const hotCustomers = (hotRes.data || []).filter(c=>!activeIds.has(c.id));
+    const hotIds = hotCustomers.map(c=>c.id);
     const movedIds = new Set();
 
-    if (hotIds.length) {
+    if(hotIds.length){
       const notesRes = await sb
         .from("chisme_notes")
         .select("contact_id,note_date,note_type")
-        .eq("note_date", today)
-        .in("contact_id", hotIds);
+        .eq("note_date",today)
+        .in("contact_id",hotIds);
 
-      if (notesRes.error) {
-        throw new Error(
-          `Customer movement query failed: ${notesRes.error.message}`
-        );
-      }
+      if(notesRes.error) throw new Error(`Customer movement: ${notesRes.error.message}`);
 
-      for (const note of notesRes.data || []) {
-        if (HOTLIST_NOTE_TYPES.has(note.note_type)) {
-          movedIds.add(note.contact_id);
-        }
+      const validTypes = new Set([
+        "hotlist_progress",
+        "site_visit_notes",
+        "estimate_notes",
+        "chisme",
+        "rolodex_update"
+      ]);
+
+      for(const note of notesRes.data || []){
+        if(validTypes.has(note.note_type)) movedIds.add(note.contact_id);
       }
     }
 
@@ -780,47 +417,33 @@ async function loadProgress() {
       "hotCard",
       movedIds.size,
       hotCustomers.length,
-      `${pct(movedIds.size, hotCustomers.length)}% moved today`,
-      hotCustomers.length
-        ? `${hotCustomers.length - movedIds.size} still waiting`
-        : "No current hot leads"
+      `${pct(movedIds.size,hotCustomers.length)}% moved today`,
+      hotCustomers.length ? `${hotCustomers.length-movedIds.size} still waiting` : "No current hot leads"
     );
-
-    const activeContactIds = activeRows
-      .map(row => row.contact_id)
-      .filter(Boolean);
 
     let projectTasks = [];
 
-    if (activeContactIds.length) {
-      const tasksRes = await sb
+    if(activeContactIds.length){
+      const taskRes = await sb
         .from("metiche_project_tasks")
         .select("id,contact_id,project_name,task_text,completed,sort_order")
-        .in("contact_id", activeContactIds)
+        .in("contact_id",activeContactIds)
         .order("sort_order");
 
-      if (tasksRes.error) {
-        throw new Error(`Project task query failed: ${tasksRes.error.message}`);
-      }
-
-      projectTasks = tasksRes.data || [];
+      if(taskRes.error) throw new Error(`Project tasks: ${taskRes.error.message}`);
+      projectTasks = taskRes.data || [];
     }
 
-    renderStovetop(activeRows, projectTasks);
+    renderStovetop(activeRows,contactsById,projectTasks);
 
-  } catch (error) {
-    console.error("Loadbar failed:", error);
-
-    showError(
-      "Live data could not be loaded.\n\n" +
-      (error?.message || String(error))
-    );
+  }catch(error){
+    console.error("Loadbar failed:",error);
+    showError(`Live data could not be loaded.\n\n${error?.message || String(error)}`);
   }
 }
 
-updateClock();
-setInterval(updateClock, 1000);
-
 loadProgress();
-setInterval(loadProgress, 60000);
+setInterval(loadProgress,60000);
 </script>
+</body>
+</html>
