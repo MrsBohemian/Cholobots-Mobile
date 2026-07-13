@@ -452,7 +452,7 @@ button {
   </header>
 
   <div id="status" class="status"></div>
-
+  
   <section class="load-section">
 
     <div class="load-card today" id="todayCard">
@@ -460,7 +460,7 @@ button {
         <div class="load-title">TODAY'S WORK</div>
         <div class="load-count">— / —</div>
       </div>
-      <div class="load-sub">Completed tasks from Heaven's current !mtoday list</div>
+      <div class="load-sub"><span id="todayOwnerLabel">Completed tasks from the current user's !mtoday list</span></div>
       <div class="dashboard-bar"><div class="dashboard-fill"></div></div>
       <div class="percent-line"><span>Loading…</span><span>daily_tasks</span></div>
     </div>
@@ -521,9 +521,42 @@ const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// This phone is currently showing Heaven's !mtoday list.
-// Change this only if a different person's taskbar should be displayed.
-const DAILY_CALENDAR_KEY = "heaven";
+const USER_DIRECTORY = {
+  heaven: "Heaven",
+  daniel: "Daniel",
+  jesse: "Jesse",
+  samuel: "Samuel",
+  handley_man: "Handley Man"
+};
+
+function normalizeUserKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll(" ", "_");
+}
+
+function resolveCurrentUser() {
+  const params = new URLSearchParams(location.search);
+  const candidates = [
+    params.get("user"),
+    params.get("calendar_key"),
+    localStorage.getItem("cholobots_user"),
+    localStorage.getItem("current_user"),
+    localStorage.getItem("currentUser"),
+    sessionStorage.getItem("cholobots_user"),
+    sessionStorage.getItem("current_user")
+  ];
+
+  for (const candidate of candidates) {
+    const key = normalizeUserKey(candidate);
+    if (USER_DIRECTORY[key]) return key;
+  }
+  return "heaven";
+}
+
+const DAILY_CALENDAR_KEY = resolveCurrentUser();
+const DAILY_USER_NAME = USER_DIRECTORY[DAILY_CALENDAR_KEY] || DAILY_CALENDAR_KEY;
 
 const HOTLIST_NOTE_TYPES = new Set([
   "hotlist_progress",
@@ -565,6 +598,12 @@ function clearError() {
   const el = document.getElementById("status");
   el.style.display = "none";
   el.textContent = "";
+}
+
+function setDebug(lines) {
+  const el = document.getElementById("debug");
+  el.style.display = "block";
+  el.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines || "");
 }
 
 function setDashboardCard(cardId, done, total, leftText, rightText) {
@@ -657,9 +696,9 @@ async function loadProgress() {
     // 1. Today's work comes directly from !mtoday's daily_tasks table.
     const dailyRes = await sb
       .from("daily_tasks")
-      .select("id,task,completed,date,calendar_key")
-      .eq("calendar_key", DAILY_CALENDAR_KEY)
+      .select("id,task,completed,date,calendar_key,user_id,created_at")
       .eq("date", today)
+      .or(`calendar_key.eq.${DAILY_CALENDAR_KEY},user_id.eq.${DAILY_CALENDAR_KEY}`)
       .order("created_at");
 
     if (dailyRes.error) throw new Error(`Today's Work query failed: ${dailyRes.error.message}`);
@@ -667,12 +706,15 @@ async function loadProgress() {
     const dailyTasks = dailyRes.data || [];
     const dailyDone = dailyTasks.filter(t => Boolean(t.completed)).length;
 
+    document.getElementById("todayOwnerLabel").textContent =
+      `Completed tasks from ${DAILY_USER_NAME}'s current !mtoday list`;
+
     setDashboardCard(
       "todayCard",
       dailyDone,
       dailyTasks.length,
       `${pct(dailyDone, dailyTasks.length)}% complete`,
-      dailyTasks.length ? `${dailyTasks.length - dailyDone} remaining` : "No tasks listed"
+      dailyTasks.length ? `${dailyTasks.length - dailyDone} remaining` : "No tasks visible"
     );
 
     // 2. Current stovetop customers.
@@ -696,11 +738,11 @@ async function loadProgress() {
     const activeRows = activeRes.data || [];
     const activeIds = new Set(activeRows.map(r => r.contact_id).filter(Boolean));
 
-    // 3. Current Hot List = 50-99 degrees, excluding anyone already on the stovetop.
+    // 3. Current Hot List = 51-99 degrees, excluding anyone already on the stovetop.
     const hotRes = await sb
       .from("chisme_contacts")
       .select("id,name,hotlist_temperature,hotlist_stage,next_action")
-      .gte("hotlist_temperature", 50)
+      .gte("hotlist_temperature", 51)
       .lt("hotlist_temperature", 100)
       .order("hotlist_temperature", { ascending:false });
 
@@ -752,13 +794,6 @@ async function loadProgress() {
     }
 
     renderStovetop(activeRows, projectTasks);
-  } catch (error) {
-    console.error(error);
-    showError(
-      "Live data could not be loaded.\n\n" +
-      (error?.message || String(error)) +
-      "\n\nThe page is not showing placeholder customer data."
-    );
   }
 }
 
