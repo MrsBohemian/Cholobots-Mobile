@@ -600,12 +600,6 @@ function clearError() {
   el.textContent = "";
 }
 
-function setDebug(lines) {
-  const el = document.getElementById("debug");
-  el.style.display = "block";
-  el.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines || "");
-}
-
 function setDashboardCard(cardId, done, total, leftText, rightText) {
   const card = document.getElementById(cardId);
   if (!card) return;
@@ -794,7 +788,14 @@ async function loadProgress() {
     }
 
     renderStovetop(activeRows, projectTasks);
-  }
+
+    } catch (error) {
+      console.error(error);
+      showError(
+        "Live data could not be loaded.\n\n" +
+        (error?.message || String(error))
+      );
+    }
 }
 
 updateClock();
