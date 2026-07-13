@@ -799,33 +799,51 @@ async function loadFridge() {
 }
 
 async function loadProjectTasksForStove() {
-
   const contactIds = stoveCards
-    .map(r => r.contact_id)
+    .map(row => row.contact_id)
     .filter(Boolean);
 
   if (!contactIds.length) return;
 
   const { data, error } = await sb
     .from("metiche_project_tasks")
-    .select("*")
-    .in("contact_id", contactIds)
+    .select(`
+      id,
+      chisme_contact_id,
+      task_text,
+      completed,
+      actual_minutes,
+      completed_by,
+      completed_at,
+      created_at,
+      updated_at,
+      project_name,
+      sort_order
+    `)
+    .in("chisme_contact_id", contactIds)
     .order("project_name")
     .order("sort_order")
     .order("created_at");
 
   if (error) {
-    console.error(error);
+    console.error("Project task lookup failed:", error);
     return;
   }
 
   const byContact = {};
 
   for (const task of data || []) {
-    if (!byContact[task.contact_id]) {
-      byContact[task.contact_id] = [];
+    const contactId = task.chisme_contact_id;
+    if (!contactId) continue;
+
+    if (!byContact[contactId]) {
+      byContact[contactId] = [];
     }
-    byContact[task.contact_id].push(task);
+
+    byContact[contactId].push({
+      ...task,
+      contact_id: contactId
+    });
   }
 
   stoveCards = stoveCards.map(card => ({
