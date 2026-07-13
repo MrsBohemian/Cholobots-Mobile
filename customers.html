@@ -809,18 +809,15 @@ async function loadProjectTasksForStove() {
     .from("metiche_project_tasks")
     .select(`
       id,
-      chisme_contact_id,
+      contact_id,
       task_text,
       completed,
       actual_minutes,
-      completed_by,
-      completed_at,
       created_at,
-      updated_at,
       project_name,
       sort_order
     `)
-    .in("chisme_contact_id", contactIds)
+    .in("contact_id", contactIds)
     .order("project_name")
     .order("sort_order")
     .order("created_at");
@@ -833,7 +830,7 @@ async function loadProjectTasksForStove() {
   const byContact = {};
 
   for (const task of data || []) {
-    const contactId = task.chisme_contact_id;
+    const contactId = task.contact_id;
     if (!contactId) continue;
 
     if (!byContact[contactId]) {
