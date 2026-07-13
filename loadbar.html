@@ -369,7 +369,7 @@ async function loadProgress(){
     if(activeContactIds.length){
       const contactRes = await sb
         .from("chisme_dashboard_contacts")
-        .select("id,name,phone")
+        .select("id,name")
         .in("id",activeContactIds);
 
       if(contactRes.error) throw new Error(`Stovetop contacts: ${contactRes.error.message}`);
