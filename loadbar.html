@@ -423,6 +423,23 @@ async function loadProgress(){
 
     let projectTasks = [];
 
+    if(activeContactIds.length){
+      const taskRes = await sb
+        .from("metiche_project_tasks")
+        .select("id,chisme_contact_id,project_name,task_text,completed,sort_order")
+        .in("chisme_contact_id",activeContactIds)
+        .order("sort_order");
+    
+      if(taskRes.error){
+        throw new Error(`Project tasks: ${taskRes.error.message}`);
+      }
+    
+      projectTasks = (taskRes.data || []).map(task => ({
+        ...task,
+        contact_id: task.chisme_contact_id
+      }));
+    }
+
     renderStovetop(activeRows,contactsById,projectTasks);
 
   }catch(error){
