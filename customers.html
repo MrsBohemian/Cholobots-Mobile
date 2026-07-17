@@ -762,14 +762,23 @@ async function loadFridge() {
     Chismebot stores one journal anchor per contact in chisme_journals,
     then stores the actual entries in chisme_notes.
   */
-  const { data: journals, error: journalError } = await sb
-    .from("chisme_journals")
-    .select("id, contact_id")
-    .in("contact_id", contactIds);
-
-  if (journalError) {
-    console.warn("Chisme journal lookup failed:", journalError);
-    return;
+  const journals = [];
+  const journalBatchSize = 100;
+  
+  for (let i = 0; i < contactIds.length; i += journalBatchSize) {
+    const batch = contactIds.slice(i, i + journalBatchSize);
+  
+    const { data: batchJournals, error: journalError } = await sb
+      .from("chisme_journals")
+      .select("id, contact_id")
+      .in("contact_id", batch);
+  
+    if (journalError) {
+      console.warn("Chisme journal lookup failed:", journalError);
+      continue;
+    }
+  
+    journals.push(...(batchJournals || []));
   }
 
   const journalIds = (journals || []).map(j => j.id).filter(Boolean);
