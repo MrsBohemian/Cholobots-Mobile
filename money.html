@@ -426,6 +426,183 @@
     .bottom-pad { height: 20px; }
 
     svg { width: 100%; height: 100%; }
+
+    .plan-card .card-title {
+      margin-bottom: 6px;
+    }
+
+    .gas-plan {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .gas-can-wrap {
+      position: relative;
+      width: 160px;
+      height: 190px;
+      margin: 0 auto;
+    }
+
+    .gas-can-handle {
+      position: absolute;
+      top: 5px;
+      left: 42px;
+      width: 77px;
+      height: 44px;
+      border: 14px solid #d8342c;
+      border-bottom: 0;
+      border-radius: 22px 22px 0 0;
+      z-index: 1;
+    }
+
+    .gas-can-spout {
+      position: absolute;
+      top: 38px;
+      right: 2px;
+      width: 46px;
+      height: 22px;
+      background: #d8342c;
+      border: 3px solid #ff6b61;
+      border-left: 0;
+      transform: rotate(-20deg);
+      transform-origin: left center;
+      border-radius: 0 12px 12px 0;
+      z-index: 3;
+    }
+
+    .gas-can-body {
+      position: absolute;
+      left: 14px;
+      bottom: 4px;
+      width: 132px;
+      height: 145px;
+      border: 4px solid #ff6b61;
+      border-radius: 24px 24px 18px 18px;
+      background: linear-gradient(180deg, #7b1915, #32100e);
+      overflow: hidden;
+      box-shadow:
+        inset 0 0 0 5px rgba(255,255,255,.04),
+        0 12px 24px rgba(0,0,0,.35);
+      z-index: 2;
+    }
+
+    .gas-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0%;
+      background: linear-gradient(180deg, rgba(255,212,59,.96), rgba(255,129,68,.98));
+      transition: height .5s ease;
+    }
+
+    .gas-fill::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -5px;
+      height: 10px;
+      background: rgba(255,237,156,.92);
+      border-radius: 50%;
+    }
+
+    .gas-can-ribs {
+      position: absolute;
+      inset: 18px 24px;
+      border-left: 6px solid rgba(255,255,255,.12);
+      border-right: 6px solid rgba(0,0,0,.22);
+      transform: skewX(-7deg);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .gas-can-label {
+      position: absolute;
+      left: 34px;
+      bottom: 52px;
+      width: 92px;
+      padding: 7px 4px;
+      text-align: center;
+      border: 2px solid rgba(255,255,255,.75);
+      border-radius: 7px;
+      color: white;
+      background: rgba(0,0,0,.32);
+      font-weight: 900;
+      letter-spacing: .08em;
+      font-size: 13px;
+      z-index: 4;
+    }
+
+    .plan-progress {
+      min-width: 0;
+    }
+
+    .plan-progress strong {
+      display: block;
+      font-size: 30px;
+      color: var(--yellow);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .plan-progress p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .plan-items {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .plan-item {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 9px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      background: rgba(0,0,0,.17);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .plan-item.done {
+      opacity: .68;
+      text-decoration: line-through;
+    }
+
+    .plan-mark {
+      flex: 0 0 auto;
+      font-size: 16px;
+    }
+
+    .plan-empty {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 420px) {
+      .gas-plan {
+        grid-template-columns: 1fr;
+      }
+
+      .plan-progress {
+        text-align: center;
+      }
+
+      .plan-items {
+        text-align: left;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -436,7 +613,7 @@
       <div class="icon" style="color:var(--green)">⛽</div>
       <div>
         <h2>Fuel Gauge</h2>
-        <p>Weekly target</p>
+        <p id="objective-subtitle">Current financial objective</p>
       </div>
     </div>
 
@@ -445,9 +622,9 @@
         <div class="arc"></div>
         <div class="needle"></div>
         <div class="gauge-center">
-          <div class="fuel-label">Fuel Level</div>
-          <div class="fuel-percent" id="fuel-percent">72%</div>
-          <div class="fuel-money" id="fuel-money">$3,600 of $5,000</div>
+          <div class="fuel-label">Objective Covered</div>
+          <div class="fuel-percent" id="fuel-percent">0%</div>
+          <div class="fuel-money" id="fuel-money">$0 planned of $0 needed</div>
         </div>
       </div>
       <div class="fuel-ends"><span>E</span><span>F</span></div>
@@ -456,32 +633,63 @@
     <div class="status-row">
       <div style="font-size:34px;color:var(--green)">⛽</div>
       <div>
-        <strong>ON TRACK</strong>
-        <p>You have enough on the schedule to cover this week's expenses.</p>
+        <strong id="status-title">LOADING</strong>
+        <p id="status-text">Loading the current financial objective.</p>
       </div>
       <div class="chev">›</div>
     </div>
 
     <div class="money-grid">
       <div class="money-box">
-        <strong id="scheduled-income">$3,600</strong>
-        <span>Scheduled income</span>
+        <strong id="planned-amount">$0</strong>
+        <span>Planned toward objective</span>
       </div>
       <div class="money-box">
-        <strong id="weekly-target" style="color:var(--text)">$5,000</strong>
-        <span>Weekly target</span>
+        <strong id="remaining-gap" style="color:var(--text)">$0</strong>
+        <span>Remaining gap</span>
       </div>
     </div>
 
     <div class="next-step">
       <div style="font-size:30px;color:var(--purple)">☑</div>
       <div>
-        <strong>Next Steps</strong>
-        <p>Tap for tangible moves to improve cash flow.</p>
+        <strong>Objective Details</strong>
+        <p id="objective-details">Loading purpose and due date.</p>
       </div>
       <div class="chev">›</div>
     </div>
   </section>
+
+  <section class="card plan-card">
+    <div class="card-title">
+      <div class="icon" style="color:var(--yellow)">🛢️</div>
+      <div>
+        <h2>Action Plan</h2>
+        <p>Important items from the current brain dump</p>
+      </div>
+    </div>
+
+    <div class="gas-plan">
+      <div class="gas-can-wrap" aria-label="Important-item completion gas can">
+        <div class="gas-can-handle"></div>
+        <div class="gas-can-spout"></div>
+        <div class="gas-can-body">
+          <div class="gas-fill" id="gas-fill"></div>
+          <div class="gas-can-ribs"></div>
+        </div>
+        <div class="gas-can-label">PLAN FUEL</div>
+      </div>
+
+      <div class="plan-progress">
+        <strong id="plan-count">0 / 0</strong>
+        <p id="plan-summary">Important actions completed for this financial objective.</p>
+        <div class="plan-items" id="plan-items">
+          <div class="plan-empty">Loading important items…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <section class="card">
     <div class="card-title">
@@ -592,68 +800,281 @@
   const SUPABASE_URL = "https://pjquistiolcoqvcfmqjn.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  function money(n) {
-    return "$" + Number(n || 0).toLocaleString();
+
+  function money(value) {
+    return "$" + Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
   }
-  
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function parseJsonObject(value) {
+    if (!value) return {};
+    if (typeof value === "object") return value;
+    try { return JSON.parse(value); }
+    catch (error) {
+      console.warn("Could not parse task_summary_json", error);
+      return {};
+    }
+  }
+
+  function formatDueDate(raw) {
+    if (!raw) return "No due date";
+    const value = String(raw).trim();
+    const lower = value.toLowerCase();
+    if (lower === "today" || lower === "tomorrow") {
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }
+    const isoOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const parsed = new Date(value + (isoOnly ? "T12:00:00" : ""));
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString(undefined, {
+      month: "short", day: "numeric", year: "numeric"
+    });
+  }
+
+  function setNeedle(percent) {
+    const rotation = -180 + (clamp(percent, 0, 100) * 1.8);
+    document.querySelector(".needle").style.transform = `rotate(${rotation}deg)`;
+  }
+
+  function setStatus(status, remainingGap, objectiveAmount) {
+    const row = document.querySelector(".status-row");
+    const title = document.getElementById("status-title");
+    const body = document.getElementById("status-text");
+    const icon = row.querySelector("div");
+
+    let color = "var(--red)";
+    let label = "GAP OPEN";
+    let description = `${money(remainingGap)} still needs a plan.`;
+
+    if (objectiveAmount <= 0) {
+      color = "var(--muted)";
+      label = "NO OBJECTIVE";
+      description = "Run !mengine to set the current financial objective.";
+    } else if (status === "covered" || remainingGap <= 0) {
+      color = "var(--green)";
+      label = "OBJECTIVE COVERED";
+      description = "The current plan covers this financial objective.";
+    } else if (remainingGap < objectiveAmount) {
+      color = "var(--yellow)";
+      label = "IN PROGRESS";
+      description = `${money(remainingGap)} remains before the objective is covered.`;
+    }
+
+    title.textContent = label;
+    title.style.color = color;
+    body.textContent = description;
+    row.style.borderColor = color;
+    icon.style.color = color;
+  }
+
+  function setGear(ratio, objectiveAmount, remainingGap) {
+    let gear = "R";
+    let left = "8%";
+    let title = "REVERSE — Gap open";
+    let body = "The current objective still needs a complete funding plan.";
+    let color = "var(--red)";
+
+    if (objectiveAmount <= 0) {
+      gear = "N";
+      left = "36%";
+      title = "NEUTRAL — No objective";
+      body = "Run !mengine to publish the next financial objective.";
+      color = "var(--yellow)";
+    } else if (remainingGap <= 0 || ratio >= 1) {
+      gear = "D";
+      left = "64%";
+      title = "DRIVE — Objective covered";
+      body = "The current objective is covered. Confirm the money arrives.";
+      color = "var(--green)";
+    } else if (ratio >= 0.4) {
+      gear = "N";
+      left = "36%";
+      title = "NEUTRAL — Partially covered";
+      body = "There is a plan in motion, but the objective is not fully covered.";
+      color = "var(--yellow)";
+    }
+
+    document.getElementById("shifter").style.left = left;
+    document.querySelector(".mode-badge").textContent = gear;
+    document.querySelector(".mode-box strong").textContent = title;
+    document.querySelector(".mode-box strong").style.color = color;
+    document.querySelector(".mode-box p").textContent = body;
+    document.querySelector(".mode-box").style.borderColor = color;
+  }
+
+  function renderExecution(execution) {
+    const objective = Number(execution.objective_amount || 0);
+    const planned = Number(execution.planned_amount || 0);
+    const calculatedGap = Math.max(0, objective - planned);
+    const remaining = execution.remaining_gap === null || execution.remaining_gap === undefined
+      ? calculatedGap
+      : Number(execution.remaining_gap || 0);
+
+    const ratio = objective > 0 ? clamp(planned / objective, 0, 1) : 0;
+    const percent = Math.round(ratio * 100);
+    const status = String(execution.status || (remaining <= 0 ? "covered" : "open"));
+    const purpose = execution.objective_reason || "Not specified";
+    const due = formatDueDate(execution.due_date);
+
+    document.getElementById("fuel-percent").textContent = `${percent}%`;
+    document.getElementById("fuel-percent").style.color =
+      percent >= 100 ? "var(--green)" : percent >= 40 ? "var(--yellow)" : "var(--red)";
+    document.getElementById("fuel-money").textContent =
+      `${money(planned)} planned of ${money(objective)} needed`;
+    document.getElementById("planned-amount").textContent = money(planned);
+    document.getElementById("remaining-gap").textContent = money(remaining);
+    document.getElementById("objective-subtitle").textContent = purpose;
+    document.getElementById("objective-details").textContent =
+      `Purpose: ${purpose}. Due: ${due}.`;
+
+    setNeedle(percent);
+    setStatus(status, remaining, objective);
+    setGear(ratio, objective, remaining);
+  }
+
+
+  function isCompletedStatus(status) {
+    return ["completed", "complete", "done", "closed"].includes(
+      String(status || "").toLowerCase()
+    );
+  }
+
+  function isVisiblePlanStatus(status) {
+    return !["cancelled", "canceled", "deleted", "removed"].includes(
+      String(status || "").toLowerCase()
+    );
+  }
+
+  function renderImportantPlan(items) {
+    const visible = (items || []).filter(item => isVisiblePlanStatus(item.status));
+    const doneItems = visible.filter(item => isCompletedStatus(item.status));
+
+    const total = visible.length;
+    const done = doneItems.length;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    document.getElementById("plan-count").textContent = `${done} / ${total}`;
+    document.getElementById("gas-fill").style.height = `${percent}%`;
+
+    const summary = document.getElementById("plan-summary");
+
+    if (total === 0) {
+      summary.textContent = "No important-item plan is attached to this objective yet.";
+    } else if (done === total) {
+      summary.textContent = "All important actions in the plan are complete.";
+    } else {
+      const remaining = total - done;
+      summary.textContent = `${remaining} important action${remaining === 1 ? "" : "s"} remaining.`;
+    }
+
+    const list = document.getElementById("plan-items");
+    list.innerHTML = "";
+
+    if (total === 0) {
+      const empty = document.createElement("div");
+      empty.className = "plan-empty";
+      empty.textContent = "Use !mbraindump and place actions in Important to create the plan.";
+      list.appendChild(empty);
+      return;
+    }
+
+    visible.forEach(item => {
+      const completed = isCompletedStatus(item.status);
+
+      const row = document.createElement("div");
+      row.className = `plan-item${completed ? " done" : ""}`;
+
+      const mark = document.createElement("span");
+      mark.className = "plan-mark";
+      mark.textContent = completed ? "✅" : "⬜";
+
+      const label = document.createElement("span");
+      label.textContent = item.item || "(untitled item)";
+
+      row.appendChild(mark);
+      row.appendChild(label);
+      list.appendChild(row);
+    });
+  }
+
+  async function loadImportantPlan(objectiveRow) {
+    if (!objectiveRow?.created_at) {
+      renderImportantPlan([]);
+      return;
+    }
+
+    let query = supabaseClient
+      .from("metiche_important_items")
+      .select("id, item, status, created_at, updated_at, completed_at, discord_user, channel_id")
+      .gte("created_at", objectiveRow.created_at)
+      .order("created_at", { ascending: true });
+
+    if (objectiveRow.discord_user) {
+      query = query.eq("discord_user", objectiveRow.discord_user);
+    }
+
+    if (objectiveRow.channel_id) {
+      query = query.eq("channel_id", String(objectiveRow.channel_id));
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Important plan load failed:", error);
+      const list = document.getElementById("plan-items");
+      list.innerHTML = "";
+      const empty = document.createElement("div");
+      empty.className = "plan-empty";
+      empty.textContent = "Could not load important items.";
+      list.appendChild(empty);
+      return;
+    }
+
+    renderImportantPlan(data || []);
+  }
+
   async function loadFinancialEngine() {
     const { data, error } = await supabaseClient
       .from("metiche_weekly")
-      .select("task_summary_json, created_at")
+      .select("task_summary_json, created_at, discord_user, channel_id")
       .order("id", { ascending: false })
       .limit(1)
-      .single();
-  
+      .maybeSingle();
+
     if (error) {
       console.error("Financial engine load failed:", error);
-      console.log(JSON.stringify(data, null, 2));
+      document.getElementById("status-title").textContent = "LOAD FAILED";
+      document.getElementById("status-text").textContent =
+        error.message || "Could not load the latest objective.";
       return;
     }
-  
-    const weekly = data?.task_summary_json?.weekly_execution || {};
-    const target = Number(weekly.target_amount || 0);
-    const booked = Number(weekly.scheduled_revenue || 0);
-    const pct = target > 0 ? Math.min(100, Math.round((booked / target) * 100)) : 0;
 
-    let gear = "D";
-    let gearLeft = "64%";
-    let modeTitle = "DRIVE — Cash flow positive";
-    let modeText = "You are generating more cash than you need to operate.";
-    
-    if (booked >= target * 1.25 && target > 0) {
-      gear = "OD";
-      gearLeft = "92%";
-      modeTitle = "OVERDRIVE — Surplus";
-      modeText = "You are beyond target. Protect the schedule and collect cleanly.";
-    } else if (booked >= target && target > 0) {
-      gear = "D";
-      gearLeft = "64%";
-    } else if (booked >= target * 0.4 && target > 0) {
-      gear = "N";
-      gearLeft = "36%";
-      modeTitle = "NEUTRAL — Survive";
-      modeText = "Enough movement to stabilize, but the week still needs money.";
-    } else {
-      gear = "R";
-      gearLeft = "8%";
-      modeTitle = "REVERSE — Deficit";
-      modeText = "The week needs leads, estimates, collections, or urgent booking.";
+    const summary = parseJsonObject(data?.task_summary_json);
+    let execution = summary.financial_execution || {};
+
+    if (!Object.keys(execution).length && summary.weekly_execution) {
+      const legacy = summary.weekly_execution;
+      const legacyAmount = Number(legacy.revenue_gap || legacy.target_amount || 0);
+      execution = {
+        objective_amount: legacyAmount,
+        planned_amount: 0,
+        remaining_gap: legacyAmount,
+        objective_reason: "Legacy financial target",
+        due_date: null,
+        status: legacyAmount > 0 ? "open" : "covered"
+      };
     }
-    
-    document.getElementById("shifter").style.left = gearLeft;
-    document.querySelector(".mode-badge").textContent = gear;
-    document.querySelector(".mode-box strong").textContent = modeTitle;
-    document.querySelector(".mode-box p").textContent = modeText;
-  
-    document.getElementById("fuel-percent").textContent = pct + "%";
-    document.getElementById("fuel-money").textContent = `${money(booked)} of ${money(target)}`;
-    document.getElementById("scheduled-income").textContent = money(booked);
-    document.getElementById("weekly-target").textContent = money(target);
+
+    renderExecution(execution);
+    await loadImportantPlan(data);
   }
-  
+
   loadFinancialEngine();
   setInterval(loadFinancialEngine, 60000);
   </script>
+
 </body>
 </html>
