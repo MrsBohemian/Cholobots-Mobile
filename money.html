@@ -847,8 +847,11 @@
 
     let color = "var(--red)";
     let label = "GAP OPEN";
-    let description = `${money(remainingGap)} still needs a plan.`;
-
+    let description =
+    totalImportantItems > 0
+        ? `${totalImportantItems} action${totalImportantItems === 1 ? "" : "s"} identified to close this objective.`
+        : `${money(remainingGap)} still needs a plan.`;
+    
     if (objectiveAmount <= 0) {
       color = "var(--muted)";
       label = "NO OBJECTIVE";
@@ -857,11 +860,17 @@
       color = "var(--green)";
       label = "OBJECTIVE COVERED";
       description = "The current plan covers this financial objective.";
-    } else if (remainingGap < objectiveAmount) {
+    } else if (totalImportantItems > 0) {
       color = "var(--yellow)";
-      label = "IN PROGRESS";
-      description = `${money(remainingGap)} remains before the objective is covered.`;
-    }
+      label = "PLAN READY";
+  
+      if (completedImportantItems === totalImportantItems) {
+          description = "All planned actions are complete. Waiting for the money to arrive.";
+      } else {
+          description =
+              `${completedImportantItems}/${totalImportantItems} important actions completed.`;
+      }
+  }
 
     title.textContent = label;
     title.style.color = color;
@@ -870,6 +879,9 @@
     icon.style.color = color;
   }
 
+  let totalImportantItems = 0;
+  let completedImportantItems = 0;
+    
   function setGear(ratio, objectiveAmount, remainingGap) {
     let gear = "R";
     let left = "8%";
@@ -954,6 +966,8 @@
 
     const total = visible.length;
     const done = doneItems.length;
+    totalImportantItems = total;
+    completedImportantItems = done;
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
     document.getElementById("plan-count").textContent = `${done} / ${total}`;
@@ -1062,8 +1076,8 @@
       };
     }
 
-    renderExecution(execution);
     await loadImportantPlan(data);
+    renderExecution(execution);
   }
 
   loadFinancialEngine();
