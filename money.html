@@ -1008,7 +1008,7 @@
 
     let query = supabaseClient
       .from("metiche_important_items")
-      .select("id, item, status, created_at, updated_at, completed_at, discord_user, channel_id")
+      .select("id, item, status, created_at, discord_user, channel_id")
       .gte("created_at", objectiveRow.created_at)
       .order("created_at", { ascending: true });
 
