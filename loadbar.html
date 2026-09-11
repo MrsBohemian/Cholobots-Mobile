@@ -383,7 +383,7 @@ function renderStovetopCustomers(customers){
 
   container.innerHTML = sorted.map(customer=>{
     const temp = Number(customer.hotlist_temperature || 50);
-    const stage = customer.hotlist_stage || "Warm lead";
+    const stage = customer.pipeline_stage || "Warm lead";
     const next = customer.next_action || "";
 
     return `
@@ -507,7 +507,7 @@ async function loadProgress(){
 
     const hotRes = await sb
       .from("chisme_dashboard_contacts")
-      .select("id,name,hotlist_temperature,hotlist_stage,next_action")
+      .select("id,name,hotlist_temperature,pipeline_stage,next_action")
       .gte("hotlist_temperature",51)
       .lt("hotlist_temperature",100);
 
