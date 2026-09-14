@@ -529,8 +529,99 @@
       cursor:wait;
     }
 
+    .freezer-door {
+      padding:16px 14px 18px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.55), transparent 22%),
+        linear-gradient(#b8efe7, #6fc6ba);
+      border-bottom:6px solid #123c4c;
+      box-shadow:
+        inset 0 0 0 3px #dbfff9,
+        inset 0 -4px 0 #2e7c73;
+      font-family:"Courier New", monospace;
+      position:relative;
+    }
+
+    .freezer-title {
+      color:#082531;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      text-shadow:1px 1px 0 #fff;
+      margin-bottom:12px;
+      padding-right:40px;
+    }
+
+    .magnet-alphabet {
+      display:grid;
+      grid-template-columns:repeat(9, minmax(0, 1fr));
+      gap:8px 7px;
+      align-items:center;
+      justify-items:center;
+    }
+
+    .letter-magnet {
+      width:30px;
+      height:32px;
+      border:0;
+      padding:0;
+      cursor:pointer;
+      font-family:"Courier New", monospace;
+      font-size:22px;
+      font-weight:900;
+      line-height:30px;
+      text-align:center;
+      color:#071318;
+      box-shadow:
+        3px 3px 0 #061116,
+        inset -2px -2px 0 rgba(0,0,0,.18),
+        inset 2px 2px 0 rgba(255,255,255,.32);
+      text-shadow:1px 1px 0 rgba(255,255,255,.25);
+      transform:rotate(var(--r, 0deg));
+      image-rendering:pixelated;
+    }
+
+    .letter-magnet:nth-child(6n+1) { background:#ff5a5f; --r:-4deg; }
+    .letter-magnet:nth-child(6n+2) { background:#ffd34e; --r:3deg; }
+    .letter-magnet:nth-child(6n+3) { background:#4da7ff; --r:-2deg; }
+    .letter-magnet:nth-child(6n+4) { background:#52d273; --r:4deg; }
+    .letter-magnet:nth-child(6n+5) { background:#b770ff; --r:-3deg; }
+    .letter-magnet:nth-child(6n+6) { background:#ff914d; --r:2deg; }
+
+    .letter-magnet.inactive {
+      opacity:.22;
+      filter:grayscale(.7);
+      cursor:default;
+      transform:none;
+      box-shadow:
+        2px 2px 0 #061116,
+        inset -2px -2px 0 rgba(0,0,0,.18);
+    }
+
+    .letter-magnet.active-letter {
+      outline:3px solid #fff6b7;
+      outline-offset:2px;
+      box-shadow:
+        4px 4px 0 #061116,
+        0 0 0 3px #2f695f,
+        inset -2px -2px 0 rgba(0,0,0,.18),
+        inset 2px 2px 0 rgba(255,255,255,.32);
+    }
+
+    .freezer-handle {
+      position:absolute;
+      right:15px;
+      top:14px;
+      width:9px;
+      height:42px;
+      background:#123c4c;
+      box-shadow:-3px 0 0 #e7fbff;
+    }
+
     @media (max-width:390px) {
       .toggle button { font-size:10px; }
+      .magnet-alphabet { grid-template-columns:repeat(7, minmax(0, 1fr)); gap:7px 6px; }
+      .letter-magnet { width:29px; height:31px; font-size:21px; line-height:29px; }
       .fridge-shell { margin-top:2px; }
       .fridge-cavity { min-height:560px; }
       .fridge-inner { min-height:510px; }
@@ -588,10 +679,13 @@
 
   <div id="fridgeSection">
     <div class="fridge-shell">
-      <div class="fridge-header">
-        <span class="pixel-fridge-icon" aria-hidden="true"></span>
-        Chismebot Refrigerator
-        <span class="fridge-handle" aria-hidden="true"></span>
+      <div class="freezer-door">
+        <div class="freezer-title">
+          <span class="pixel-fridge-icon" aria-hidden="true"></span>
+          Chisme Notes on Cool Customers
+        </div>
+        <div id="magnetAlphabet" class="magnet-alphabet"></div>
+        <span class="freezer-handle" aria-hidden="true"></span>
       </div>
 
       <div class="fridge-cavity">
@@ -782,9 +876,11 @@ async function loadFridge() {
     return;
   }
 
-  fridgeCards = (data || []).filter(c =>
-    !activeIds.has(c.id)
-  );
+  fridgeCards = (data || [])
+    .filter(c => !activeIds.has(c.id))
+    .sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || ""), "en", { sensitivity:"base" })
+    );
 
   if (fridgeIndex >= fridgeCards.length) fridgeIndex = 0;
 
@@ -1156,9 +1252,59 @@ function currentFridgeCustomer() {
   return fridgeCards[fridgeIndex] || null;
 }
 
+const FRIDGE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+function customerInitial(c) {
+  return String(c?.name || "")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+}
+
+function fridgeHasLetter(letter) {
+  return fridgeCards.some(c => customerInitial(c) === letter);
+}
+
+function jumpToFridgeLetter(letter) {
+  if (!fridgeHasLetter(letter)) return;
+
+  const target = fridgeCards.findIndex(c => customerInitial(c) === letter);
+  if (target < 0) return;
+
+  fridgeIndex = target;
+  renderFridge();
+
+  const shell = document.querySelector(".fridge-shell");
+  if (shell) shell.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function renderMagnetAlphabet() {
+  const el = document.getElementById("magnetAlphabet");
+  if (!el) return;
+
+  const current = currentFridgeCustomer();
+  const currentLetter = customerInitial(current);
+
+  el.innerHTML = FRIDGE_LETTERS.map(letter => {
+    const hasCustomers = fridgeHasLetter(letter);
+    const active = hasCustomers && currentLetter === letter;
+
+    return `
+      <button
+        class="letter-magnet${hasCustomers ? "" : " inactive"}${active ? " active-letter" : ""}"
+        ${hasCustomers ? `onclick="jumpToFridgeLetter('${letter}')"` : "disabled"}
+        aria-label="${hasCustomers ? `Jump to customers beginning with ${letter}` : `No customers beginning with ${letter}`}">
+        ${letter}
+      </button>
+    `;
+  }).join("");
+}
+
 function renderFridge() {
   const el = document.getElementById("fridgeStack");
   const c = currentFridgeCustomer();
+
+  renderMagnetAlphabet();
 
   if (!c) {
     el.innerHTML = `
@@ -1263,6 +1409,7 @@ function renderFridge() {
     </div>
 
     <div class="fridge-counter">
+      ${customerInitial(c) ? `Letter ${esc(customerInitial(c))} · ` : ""}
       Customer ${fridgeIndex + 1} of ${fridgeCards.length}
     </div>
   `;
