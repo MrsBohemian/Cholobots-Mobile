@@ -9,7 +9,7 @@
     :root {
       --bg:#000; --card:#1b1b1b; --border:#333;
       --text:#eee; --muted:#9a9a9a;
-      --hot:#ff6a00; --stove:#ff2d2d;
+      --stovetop:#ff6a00; --oven:#ff2d2d;
       --fridge:#75dcff; --fridge-dark:#174e63;
       --fridge-light:#dff8ff;
     }
@@ -67,14 +67,14 @@
       gap:5px;
     }
 
-    .toggle button.active.hotbtn {
-      border-color:var(--hot);
-      color:var(--hot);
+    .toggle button.active.stovetopbtn {
+      border-color:var(--stovetop);
+      color:var(--stovetop);
     }
 
-    .toggle button.active.stovebtn {
-      border-color:var(--stove);
-      color:var(--stove);
+    .toggle button.active.ovenbtn {
+      border-color:var(--oven);
+      color:var(--oven);
     }
 
     .toggle button.active.fridgebtn {
@@ -111,16 +111,16 @@
       letter-spacing:0.03em;
     }
 
-    .hot .banner {
+    .stovetop .banner {
       background:rgba(255,106,0,0.16);
-      color:var(--hot);
-      border-bottom-color:var(--hot);
+      color:var(--stovetop);
+      border-bottom-color:var(--stovetop);
     }
 
-    .stove .banner {
+    .oven .banner {
       background:rgba(255,45,45,0.16);
-      color:var(--stove);
-      border-bottom-color:var(--stove);
+      color:var(--oven);
+      border-bottom-color:var(--oven);
     }
 
     .name {
@@ -143,6 +143,40 @@
       margin:6px 0;
       color:#ddd;
       line-height:1.3;
+    }
+
+    .pipeline-stage {
+      margin:6px 0 10px;
+      color:var(--stovetop);
+      font-size:17px;
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+
+    .opportunity-top {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:8px;
+    }
+
+    .opportunity-name {
+      font-size:24px;
+      font-weight:900;
+      line-height:1.05;
+    }
+
+    .opportunity-temp {
+      flex:0 0 auto;
+      color:#111;
+      background:#ffd36a;
+      border:3px solid #6b4a00;
+      padding:6px 8px;
+      font-weight:900;
+      font-size:19px;
+      box-shadow:3px 3px 0 #000;
     }
 
     .muted { color:var(--muted); }
@@ -536,20 +570,20 @@
 <div class="app">
 
   <div class="toggle">
-    <button id="hotBtn" class="hotbtn" onclick="setMode('hot')">🌡 HOTLIST</button>
-    <button id="stoveBtn" class="stovebtn" onclick="setMode('stove')">🔥 STOVETOP</button>
+    <button id="stovetopBtn" class="stovetopbtn" onclick="setMode('stovetop')">🍲 STOVETOP</button>
+    <button id="ovenBtn" class="ovenbtn" onclick="setMode('oven')">🔥 OVEN</button>
     <button id="fridgeBtn" class="fridgebtn" onclick="setMode('fridge')">
       <span class="pixel-fridge-icon" aria-hidden="true"></span>
       FRIDGE
     </button>
   </div>
 
-  <div id="hotSection">
-    <div id="hotStack" class="stack"></div>
+  <div id="stovetopSection">
+    <div id="stovetopStack" class="stack"></div>
   </div>
 
-  <div id="stoveSection">
-    <div id="stoveStack" class="stack"></div>
+  <div id="ovenSection">
+    <div id="ovenStack" class="stack"></div>
   </div>
 
   <div id="fridgeSection">
@@ -580,7 +614,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function loadStove() {
+async function loadOven() {
   const { data: activeRows, error: activeError } = await sb
     .from("chisme_active")
     .select(`
@@ -595,13 +629,13 @@ async function loadStove() {
     .order("next_followup_date", { ascending:true });
 
   if (activeError) {
-    console.error("Stovetop load failed:", activeError);
-    stoveCards = [];
+    console.error("Oven load failed:", activeError);
+    ovenCards = [];
     return;
   }
 
   if (!activeRows?.length) {
-    stoveCards = [];
+    ovenCards = [];
     return;
   }
 
@@ -615,8 +649,8 @@ async function loadStove() {
     .in("id", contactIds);
 
   if (contactsError) {
-    console.error("Stovetop contact lookup failed:", contactsError);
-    stoveCards = activeRows.map(row => ({
+    console.error("Oven contact lookup failed:", contactsError);
+    ovenCards = activeRows.map(row => ({
       ...row,
       chisme_contacts: null
     }));
@@ -630,7 +664,7 @@ async function loadStove() {
     ])
   );
 
-  stoveCards = activeRows.map(row => ({
+  ovenCards = activeRows.map(row => ({
     ...row,
     chisme_contacts:
       contactsById[String(row.contact_id)] || null
@@ -638,8 +672,8 @@ async function loadStove() {
 }
 
 let mode = "fridge";
-let hotCards = [];
-let stoveCards = [];
+let stovetopCards = [];
+let ovenCards = [];
 let fridgeCards = [];
 let fridgeIndex = 0;
 let fridgeLogs = {};
@@ -664,24 +698,24 @@ function contactLine(c) {
 function setMode(m) {
   mode = m;
 
-  document.getElementById("hotSection").style.display = (m === "hot") ? "block" : "none";
-  document.getElementById("stoveSection").style.display = (m === "stove") ? "block" : "none";
+  document.getElementById("stovetopSection").style.display = (m === "stovetop") ? "block" : "none";
+  document.getElementById("ovenSection").style.display = (m === "oven") ? "block" : "none";
   document.getElementById("fridgeSection").style.display = (m === "fridge") ? "block" : "none";
 
-  document.getElementById("hotBtn").classList.toggle("active", m === "hot");
-  document.getElementById("stoveBtn").classList.toggle("active", m === "stove");
+  document.getElementById("stovetopBtn").classList.toggle("active", m === "stovetop");
+  document.getElementById("ovenBtn").classList.toggle("active", m === "oven");
   document.getElementById("fridgeBtn").classList.toggle("active", m === "fridge");
 }
 
-/* HOTLIST = customers at 51° or above who are not currently on the stovetop. */
-async function loadHot() {
+/* STOVETOP = warm opportunities at 51–99° that are not active Oven projects. */
+async function loadStovetop() {
   const { data: activeRows, error: activeError } = await sb
     .from("chisme_active")
     .select("contact_id");
 
   if (activeError) {
-    console.error("Active lookup for hotlist failed:", activeError);
-    hotCards = [];
+    console.error("Active lookup for stovetop failed:", activeError);
+    stovetopCards = [];
     return;
   }
 
@@ -691,17 +725,18 @@ async function loadHot() {
     .from("chisme_dashboard_contacts")
     .select("*")
     .gte("hotlist_temperature", 51)
+    .lt("hotlist_temperature", 100)
     .or("do_not_pursue.is.null,do_not_pursue.eq.false")
     .order("hotlist_temperature", { ascending:false })
     .order("next_followup_date", { ascending:true });
 
   if (error) {
-    console.error("Hotlist load failed:", error);
-    hotCards = [];
+    console.error("Stovetop load failed:", error);
+    stovetopCards = [];
     return;
   }
 
-  hotCards = (data || []).filter(c => !activeIds.has(c.id));
+  stovetopCards = (data || []).filter(c => !activeIds.has(c.id));
 }
 
 function formatDate(value) {
@@ -715,7 +750,7 @@ function formatDate(value) {
   });
 }
 
-/* REFRIGERATOR = paying past customers at 0–50° who are not on the stovetop. */
+/* FRIDGE = cold/past customers at 0–50° who are not active Oven projects. */
 async function loadFridge() {
   const { data: activeRows, error: activeError } = await sb
     .from("chisme_active")
@@ -807,8 +842,8 @@ async function loadFridge() {
   }
 }
 
-async function loadProjectTasksForStove() {
-  const contactIds = stoveCards
+async function loadProjectTasksForOven() {
+  const contactIds = ovenCards
     .map(row => row.contact_id)
     .filter(Boolean);
 
@@ -852,7 +887,7 @@ async function loadProjectTasksForStove() {
     });
   }
 
-  stoveCards = stoveCards.map(card => ({
+  ovenCards = ovenCards.map(card => ({
     ...card,
     project_tasks: byContact[card.contact_id] || []
   }));
@@ -873,32 +908,50 @@ function getProjectProgress(tasks) {
   };
 }
 
-function renderHot() {
-  const el = document.getElementById("hotStack");
+function renderStovetop() {
+  const el = document.getElementById("stovetopStack");
 
-  if (!hotCards.length) {
-    el.innerHTML = `<div class="empty">No hot leads at 50° or above.</div>`;
+  if (!stovetopCards.length) {
+    el.innerHTML = `<div class="empty">No warm customers on the stovetop right now.</div>`;
     return;
   }
 
-  el.innerHTML = hotCards.map(c => `
-    <div class="card hot">
-      <div class="banner">🌡 ${esc(c.hotlist_temperature ?? 0)}° LEAD</div>
-      <div class="name">${esc(c.name || "Unknown")}</div>
+  el.innerHTML = stovetopCards.map(c => {
+    const stage = c.pipeline_stage || "Warm Lead";
+    const followup = c.next_followup_date || c.next_contact_date;
 
-      <div class="field"><b>Temperature:</b> ${esc(c.hotlist_temperature ?? 0)}°</div>
-      <div class="field"><b>Phone:</b> ${esc(c.phone || "No phone saved")}</div>
-      <div class="field"><b>Next action:</b> ${esc(c.next_action || "None")}</div>
-      <div class="field"><b>Last outcome / chisme:</b> ${esc(c.last_outcome || c.chisme_summary || "No chisme logged")}</div>
-      <div class="field"><b>Follow-up date:</b> ${esc(c.next_followup_date || c.next_contact_date || "None")}</div>
+    return `
+      <div class="card stovetop">
+        <div class="banner">🍲 STOVETOP</div>
 
-      <button
-        class="return-fridge-btn"
-        onclick="returnCustomerToFridge('${esc(c.id)}', false, this)">
-        🧊 Back to Fridge — 50°
-      </button>
-    </div>
-  `).join("");
+        <div class="opportunity-top">
+          <div class="opportunity-name">🍲 ${esc(c.name || "Unknown")}</div>
+          <div class="opportunity-temp">${esc(c.hotlist_temperature ?? 0)}°</div>
+        </div>
+
+        <div class="pipeline-stage">${esc(stage)}</div>
+
+        <div class="field"><b>Next:</b> ${esc(c.next_action || "Review customer")}</div>
+        <div class="field"><b>Follow-up:</b> ${esc(followup ? formatDate(followup) : "None scheduled")}</div>
+        <div class="field"><b>Phone:</b> ${esc(c.phone || "No phone saved")}</div>
+
+        <details class="field" style="margin-top:10px;">
+          <summary style="cursor:pointer;font-weight:bold;color:#ffb14a;">
+            📝 Chisme / last outcome
+          </summary>
+          <div class="muted" style="margin-top:8px;white-space:pre-wrap;">
+            ${esc(c.last_outcome || c.chisme_summary || "No chisme logged")}
+          </div>
+        </details>
+
+        <button
+          class="return-fridge-btn"
+          onclick="returnCustomerToFridge('${esc(c.id)}', false, this)">
+          🧊 Back to Fridge — 50°
+        </button>
+      </div>
+    `;
+  }).join("");
 }
 
 function groupTasksByProject(tasks) {
@@ -920,7 +973,7 @@ function renderProjectBlock(projectName, tasks) {
     <div class="field"><b>Project:</b> ${esc(projectName)}</div>
 
     <div class="field">
-      <b>Ready:</b> ${progress.percent}% (${progress.done}/${progress.total})
+      <b>Project progress:</b> ${progress.percent}% (${progress.done}/${progress.total})
     </div>
 
     <div class="field"><b>Project Tasks</b></div>
@@ -937,15 +990,15 @@ function renderProjectBlock(projectName, tasks) {
   `;
 }
 
-function renderStove() {
-  const el = document.getElementById("stoveStack");
+function renderOven() {
+  const el = document.getElementById("ovenStack");
 
-  if (!stoveCards.length) {
-    el.innerHTML = `<div class="empty">No projects on the stovetop.</div>`;
+  if (!ovenCards.length) {
+    el.innerHTML = `<div class="empty">No active projects in the oven.</div>`;
     return;
   }
 
-  el.innerHTML = stoveCards.map(row => {
+  el.innerHTML = ovenCards.map(row => {
     const c = row.chisme_contacts || {};
     const tasks = row.project_tasks || [];
     const groupedProjects = groupTasksByProject(tasks);
@@ -961,8 +1014,8 @@ function renderStove() {
       `;
 
     return `
-      <div class="card stove">
-        <div class="banner">🔥 BURNER ${esc(row.burner_position || "?")}</div>
+      <div class="card oven">
+        <div class="banner">🔥 OVEN${row.burner_position ? ` · SLOT ${esc(row.burner_position)}` : ""}</div>
 
         <div class="name">${esc(c.name || "Unknown")}</div>
         <div class="meta">${esc(contactLine(c))}</div>
@@ -1010,7 +1063,7 @@ function renderStove() {
 }
 
 
-async function returnCustomerToFridge(contactId, removeFromStove, button) {
+async function returnCustomerToFridge(contactId, removeFromOven, button) {
   if (!contactId) return;
 
   const originalText = button?.textContent || "🧊 Back to Fridge — 50°";
@@ -1057,27 +1110,27 @@ async function returnCustomerToFridge(contactId, removeFromStove, button) {
     return;
   }
 
-  if (removeFromStove) {
+  if (removeFromOven) {
     const { error: activeError } = await sb
       .from("chisme_active")
       .delete()
       .eq("contact_id", contactId);
 
     if (activeError) {
-      console.error("Temperature reset, but stovetop removal failed:", activeError);
+      console.error("Temperature reset, but oven removal failed:", activeError);
       if (button) {
         button.disabled = false;
-        button.textContent = "50° saved; burner removal failed";
+        button.textContent = "50° saved; oven removal failed";
       }
       return;
     }
   }
 
   // Remove the card immediately so the old list cannot remain visually stale.
-  hotCards = hotCards.filter(c => String(c.id) !== String(contactId));
-  stoveCards = stoveCards.filter(row => String(row.contact_id) !== String(contactId));
-  renderHot();
-  renderStove();
+  stovetopCards = stovetopCards.filter(c => String(c.id) !== String(contactId));
+  ovenCards = ovenCards.filter(row => String(row.contact_id) !== String(contactId));
+  renderStovetop();
+  renderOven();
 
   await loadAll();
 
@@ -1263,8 +1316,8 @@ async function changeTemperature(amount) {
   if (next > 50 || next < 0 || doNotPursue) {
     fridgeCards.splice(fridgeIndex, 1);
     if (fridgeIndex >= fridgeCards.length) fridgeIndex = 0;
-    await loadHot();
-    renderHot();
+    await loadStovetop();
+    renderStovetop();
     renderFridge();
     return;
   }
@@ -1318,10 +1371,10 @@ function nextFridgeCustomer() {
 }
 
 async function loadAll() {
-  await Promise.all([loadHot(), loadStove(), loadFridge()]);
-  await loadProjectTasksForStove();
-  renderHot();
-  renderStove();
+  await Promise.all([loadStovetop(), loadOven(), loadFridge()]);
+  await loadProjectTasksForOven();
+  renderStovetop();
+  renderOven();
   renderFridge();
   setMode(mode);
 }
