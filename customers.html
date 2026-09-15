@@ -709,59 +709,64 @@ const SUPABASE_ANON_KEY = "sb_publishable_SrGvJETp3Bpm9i9n1wGheQ_3Ni7FdIv";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function loadOven() {
-  const { data: activeRows, error: activeError } = await sb
-    .from("chisme_active")
+  // OVEN = real active Crudobot projects, not customer-level active flags.
+  const { data: projects, error: projectError } = await sb
+    .from("crudo_projects")
     .select(`
       id,
       contact_id,
-      active_reason,
-      burner_position,
-      next_followup_date,
-      active_owner
+      opportunity_id,
+      project_name,
+      scope_notes,
+      service_address,
+      status,
+      owner,
+      oven_position,
+      contract_amount,
+      approved_at,
+      started_at,
+      completed_at
     `)
-    .order("burner_position", { ascending:true })
-    .order("next_followup_date", { ascending:true });
+    .eq("status", "active")
+    .order("oven_position", { ascending:true });
 
-  if (activeError) {
-    console.error("Oven load failed:", activeError);
+  if (projectError) {
+    console.error("Crudobot Oven load failed:", projectError);
     ovenCards = [];
     return;
   }
 
-  if (!activeRows?.length) {
+  if (!projects?.length) {
     ovenCards = [];
     return;
   }
 
-  const contactIds = activeRows
-    .map(row => row.contact_id)
-    .filter(Boolean);
+  const contactIds = [...new Set(projects.map(p => p.contact_id).filter(Boolean))];
+  const projectIds = projects.map(p => p.id).filter(Boolean);
 
-  const { data: contacts, error: contactsError } = await sb
-    .from("chisme_dashboard_contacts")
-    .select("*")
-    .in("id", contactIds);
+  const [{ data: contacts, error: contactsError }, { data: tasks, error: tasksError }] = await Promise.all([
+    sb.from("chisme_dashboard_contacts").select("*").in("id", contactIds),
+    sb.from("crudo_project_tasks")
+      .select("id, project_id, task_name, task_order, status, completed_at, estimated_minutes, actual_minutes")
+      .in("project_id", projectIds)
+      .order("task_order", { ascending:true })
+  ]);
 
-  if (contactsError) {
-    console.error("Oven contact lookup failed:", contactsError);
-    ovenCards = activeRows.map(row => ({
-      ...row,
-      chisme_contacts: null
-    }));
-    return;
+  if (contactsError) console.error("Oven contact lookup failed:", contactsError);
+  if (tasksError) console.error("Crudobot project task lookup failed:", tasksError);
+
+  const contactsById = Object.fromEntries((contacts || []).map(c => [String(c.id), c]));
+  const tasksByProject = {};
+  for (const task of tasks || []) {
+    const projectId = String(task.project_id);
+    if (!tasksByProject[projectId]) tasksByProject[projectId] = [];
+    tasksByProject[projectId].push(task);
   }
 
-  const contactsById = Object.fromEntries(
-    (contacts || []).map(contact => [
-      String(contact.id),
-      contact
-    ])
-  );
-
-  ovenCards = activeRows.map(row => ({
-    ...row,
-    chisme_contacts:
-      contactsById[String(row.contact_id)] || null
+  ovenCards = projects.map(project => ({
+    ...project,
+    chisme_contacts: contactsById[String(project.contact_id)] || null,
+    project_tasks: tasksByProject[String(project.id)] || []
   }));
 }
 
@@ -938,69 +943,14 @@ async function loadFridge() {
   }
 }
 
-async function loadProjectTasksForOven() {
-  const contactIds = ovenCards
-    .map(row => row.contact_id)
-    .filter(Boolean);
-
-  if (!contactIds.length) return;
-
-  const { data, error } = await sb
-    .from("metiche_project_tasks")
-    .select(`
-      id,
-      contact_id,
-      task_text,
-      completed,
-      actual_minutes,
-      created_at,
-      project_name,
-      sort_order
-    `)
-    .in("contact_id", contactIds)
-    .order("project_name")
-    .order("sort_order")
-    .order("created_at");
-
-  if (error) {
-    console.error("Project task lookup failed:", error);
-    return;
-  }
-
-  const byContact = {};
-
-  for (const task of data || []) {
-    const contactId = task.contact_id;
-    if (!contactId) continue;
-
-    if (!byContact[contactId]) {
-      byContact[contactId] = [];
-    }
-
-    byContact[contactId].push({
-      ...task,
-      contact_id: contactId
-    });
-  }
-
-  ovenCards = ovenCards.map(card => ({
-    ...card,
-    project_tasks: byContact[card.contact_id] || []
-  }));
-}
-
 function getProjectProgress(tasks) {
-
   const total = tasks.length;
-
-  const done = tasks.filter(t => t.completed).length;
+  const done = tasks.filter(t => t.status === "completed").length;
 
   return {
     total,
     done,
-    percent: total
-      ? Math.round(done / total * 100)
-      : 0
+    percent: total ? Math.round(done / total * 100) : 0
   };
 }
 
@@ -1050,38 +1000,27 @@ function renderStovetop() {
   }).join("");
 }
 
-function groupTasksByProject(tasks) {
-  const grouped = {};
-
-  for (const task of tasks || []) {
-    const project = task.project_name || "No project";
-    if (!grouped[project]) grouped[project] = [];
-    grouped[project].push(task);
-  }
-
-  return grouped;
-}
-
-function renderProjectBlock(projectName, tasks) {
+function renderProjectBlock(project) {
+  const tasks = project.project_tasks || [];
   const progress = getProjectProgress(tasks);
 
   return `
-    <div class="field"><b>Project:</b> ${esc(projectName)}</div>
+    <div class="field"><b>Project:</b> ${esc(project.project_name || "Unnamed project")}</div>
+    <div class="field"><b>Customer:</b> ${esc(project.chisme_contacts?.name || "Unknown")}</div>
 
     <div class="field">
       <b>Project progress:</b> ${progress.percent}% (${progress.done}/${progress.total})
     </div>
 
-    <div class="field"><b>Project Tasks</b></div>
+    ${project.scope_notes ? `<div class="field"><b>Scope:</b> ${esc(project.scope_notes)}</div>` : ""}
 
+    <div class="field"><b>Project Tasks</b></div>
     <div class="field">
-      ${
-        tasks.length
-          ? tasks.map((t, i) =>
-              `${t.completed ? "✅" : "⬜"} ${i + 1}. ${esc(t.task_text)}`
-            ).join("<br>")
-          : "<span class='muted'>No Metiche tasks.</span>"
-      }
+      ${tasks.length
+        ? tasks.map((t, i) =>
+            `${t.status === "completed" ? "✅" : "⬜"} ${i + 1}. ${esc(t.task_name)}`
+          ).join("<br>")
+        : "<span class='muted'>No Crudobot project tasks yet.</span>"}
     </div>
   `;
 }
@@ -1094,65 +1033,30 @@ function renderOven() {
     return;
   }
 
-  el.innerHTML = ovenCards.map(row => {
-    const c = row.chisme_contacts || {};
-    const tasks = row.project_tasks || [];
-    const groupedProjects = groupTasksByProject(tasks);
-    const projectNames = Object.keys(groupedProjects);
-
-    const projectHtml = projectNames.length
-      ? projectNames.map(projectName =>
-          renderProjectBlock(projectName, groupedProjects[projectName])
-        ).join(`<hr style="border:0;border-top:1px solid #333;margin:14px 0;">`)
-      : `
-        <div class="field"><b>Project:</b> No project</div>
-        <div class="field muted">No Metiche tasks yet.</div>
-      `;
+  el.innerHTML = ovenCards.map(project => {
+    const c = project.chisme_contacts || {};
 
     return `
       <div class="card oven">
-        <div class="banner">🔥 OVEN${row.burner_position ? ` · SLOT ${esc(row.burner_position)}` : ""}</div>
+        <div class="banner">🔥 OVEN${project.oven_position ? ` · SLOT ${esc(project.oven_position)}` : ""}</div>
 
-        <div class="name">${esc(c.name || "Unknown")}</div>
-        <div class="meta">${esc(contactLine(c))}</div>
+        <div class="name">${esc(project.project_name || "Unnamed project")}</div>
+        <div class="meta">${esc(c.name || "Unknown customer")} · ${esc(contactLine(c))}</div>
 
-        ${projectHtml}
+        ${renderProjectBlock(project)}
 
-        <div class="field" style="margin-top:18px;">
-          <b>Project Notes</b>
-        </div>
-
-        <details class="field" style="margin-top:8px;">
-          <summary
-            style="
-              cursor:pointer;
-              color:#ff6a00;
-              font-weight:bold;
-              list-style:none;
-              outline:none;
-            ">
+        <details class="field" style="margin-top:14px;">
+          <summary style="cursor:pointer;font-weight:bold;color:#ff6a00;">
             📝 Project Notes
           </summary>
-        
-          <div
-            class="muted"
-            style="
-              margin-top:10px;
-              padding:10px;
-              background:#111;
-              border:1px solid #333;
-              border-radius:6px;
-              white-space:pre-wrap;
-            ">
-            ${esc(c.chisme_summary || "No project notes yet.")}
+          <div class="muted" style="margin-top:8px;white-space:pre-wrap;">
+            ${esc(project.scope_notes || "No project notes yet.")}
           </div>
         </details>
 
-        <button
-          class="return-fridge-btn"
-          onclick="returnCustomerToFridge('${row.contact_id}', true, this)">
-          🧊 Back to Fridge — 50°
-        </button>
+        <div class="field muted" style="margin-top:14px;">
+          Crudobot project · read-only test
+        </div>
       </div>
     `;
   }).join("");
@@ -1519,7 +1423,6 @@ function nextFridgeCustomer() {
 
 async function loadAll() {
   await Promise.all([loadStovetop(), loadOven(), loadFridge()]);
-  await loadProjectTasksForOven();
   renderStovetop();
   renderOven();
   renderFridge();
