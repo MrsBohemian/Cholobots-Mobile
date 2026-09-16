@@ -59,14 +59,10 @@
     .green  { color: #7ed957; }
     .orange { color: #ff9d2f; }
     .gold   { color: #ffd54a; }
+    .silver { color: #b8c4ce; }
 
     .menu-item:active {
       transform: scale(0.97);
-    }
-
-    /* Center the fifth tile */
-    .menu-item:last-child:nth-child(odd) {
-      grid-column: 1 / span 2;
     }
   </style>
 </head>
@@ -98,6 +94,11 @@
     <a class="menu-item" href="jobcost.html">
       <img src="assets/beer-stein.png" alt="Job Costing">
       <span class="gold">Job Costing</span>
+    </a>
+
+    <a class="menu-item" href="inventory.html">
+      <img src="assets/lock.png" alt="Materials & Inventory">
+      <span class="silver">Materials &amp; Inventory</span>
     </a>
 
   </main>
