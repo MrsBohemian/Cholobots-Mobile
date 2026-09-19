@@ -248,7 +248,11 @@
       <button class="close" id="closeSheet" type="button">Close</button>
       <h2 id="sheetCell">A1</h2>
       <p class="zone-name" id="sheetName">Zone</p>
-      <p class="updated" id="sheetUpdated"></p>
+      <div style="margin:16px 0 14px;padding-top:14px;border-top:1px solid #303946">
+<div style="color:#aab3c0;font-size:12px;font-weight:800;letter-spacing:.1em;margin-bottom:9px">📦 INVENTORY</div>
+<div id="inventoryList" style="display:grid;gap:8px">Loading inventory…</div>
+</div>
+<p class="updated" id="sheetUpdated"></p>
     </section>
   </div>
 
@@ -266,6 +270,7 @@
     const sheetCell = document.getElementById("sheetCell");
     const sheetName = document.getElementById("sheetName");
     const sheetUpdated = document.getElementById("sheetUpdated");
+    const inventoryList = document.getElementById("inventoryList");
     const closeSheet = document.getElementById("closeSheet");
 
     const zoneData = new Map();
@@ -299,15 +304,41 @@
       }
     }
 
-    function openZone(cell, button) {
+    async function openZone(cell, button) {
       document.querySelectorAll(".zone.active").forEach(el => el.classList.remove("active"));
       button.classList.add("active");
-
       const row = zoneData.get(cell);
       sheetCell.textContent = cell;
       sheetName.textContent = row?.zone_name || "Open / unmapped";
       sheetUpdated.textContent = row ? prettyDate(row.updated_at) : "No zone record";
+      inventoryList.textContent = "Loading inventory…";
       sheetBackdrop.classList.add("open");
+
+      try {
+        const { data, error } = await sb.from("inventory_items")
+          .select("id,item_name,quantity,unit,location,category,notes")
+          .eq("location", cell).order("item_name");
+        if (error) throw error;
+        inventoryList.innerHTML = "";
+        if (!data || !data.length) {
+          inventoryList.textContent = "No inventory recorded in this zone yet.";
+          return;
+        }
+        data.forEach(item => {
+          const line = document.createElement("div");
+          line.style.cssText = "display:flex;justify-content:space-between;gap:14px;padding:10px 12px;border:1px solid #303946;border-radius:10px;background:rgba(255,255,255,.035)";
+          const name = document.createElement("strong");
+          name.textContent = item.item_name || "Unnamed item";
+          const qty = document.createElement("strong");
+          qty.style.color = "#ffbf2f";
+          qty.textContent = `${item.quantity ?? 0}${item.unit ? " " + item.unit : ""}`;
+          line.append(name, qty);
+          inventoryList.appendChild(line);
+        });
+      } catch (err) {
+        console.error(err);
+        inventoryList.textContent = "Could not load inventory for this zone.";
+      }
     }
 
     function closeZone() {
