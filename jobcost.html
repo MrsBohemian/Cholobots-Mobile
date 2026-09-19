@@ -130,7 +130,7 @@
   <div id="status" class="status">Connecting to Supabase…</div>
 
   <div id="report" class="report"></div>
-  <div class="foot">GUARDABOT MATERIALS + OBIJUAN QUEST PAYOUTS + CRUDOBOT JOB RECORD</div>
+  <div class="foot">CRUDOBOT PROJECT + MATERIALS + METICHE LABOR + OBIJUAN PAYOUTS</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -144,151 +144,254 @@ const esc = value => String(value ?? "")
   .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
   .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 const money = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n||0));
-const slugify = s => String(s||"").trim().toLowerCase().replace(/[_\s]+/g,"-").replace(/[^a-z0-9-]/g,"");
+const minutesLabel = mins => {
+  const total = Number(mins || 0);
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  if (hours && minutes) return `${hours}h ${minutes}m`;
+  if (hours) return `${hours}h`;
+  return `${minutes}m`;
+};
 const signedTransaction = row => {
   const total = Math.abs(Number(row.total || 0));
-  const type = String(row.transaction_type || "").toLowerCase();
-  return ["return","credit","refund"].includes(type) ? -total : total;
+  return String(row.transaction_type || "").toLowerCase() === "return" ? -total : total;
 };
 const payoutValue = row => row.paid_amount == null
   ? Number(row.accepted_price || 0)
   : Number(row.paid_amount || 0);
 
+let projectCache = [];
+
 async function loadProjects(){
-  const {data,error} = await sb
-    .from("crudobot_jobs")
-    .select("project_slug,project_name,status")
-    .order("project_name");
-  if(error){
-    $("status").textContent = "Crudobot jobs could not load: " + error.message;
+  const [projectResult, contactResult] = await Promise.all([
+    sb.from("crudo_projects")
+      .select("id,contact_id,project_name,status,created_at")
+      .order("project_name"),
+    sb.from("chisme_contacts")
+      .select("id,name,first_name,last_name,company")
+  ]);
+
+  if(projectResult.error){
+    $("status").textContent = "Crudobot projects could not load: " + projectResult.error.message;
     return;
   }
+
+  const contacts = new Map();
+  (contactResult.data || []).forEach(c => {
+    const person = c.name || [c.first_name,c.last_name].filter(Boolean).join(" ") || c.company || "Unknown customer";
+    contacts.set(c.id, person);
+  });
+
+  projectCache = (projectResult.data || []).map(p => ({
+    ...p,
+    customer_name: contacts.get(p.contact_id) || "Unknown customer"
+  })).sort((a,b) =>
+    `${a.customer_name} ${a.project_name}`.localeCompare(`${b.customer_name} ${b.project_name}`)
+  );
+
   const select = $("projectSelect");
   const requested = new URLSearchParams(location.search).get("project");
-  select.innerHTML = (data||[]).map(row =>
-    `<option value="${esc(row.project_slug)}">${esc(row.project_name)}</option>`
+  select.innerHTML = projectCache.map(row =>
+    `<option value="${esc(row.id)}">${esc(row.customer_name)} — ${esc(row.project_name)}</option>`
   ).join("");
+
   if(requested && [...select.options].some(o => o.value === requested)) select.value = requested;
-  if(!select.value && data?.length) select.value = data[0].project_slug;
+  if(!select.value && projectCache.length) select.value = projectCache[0].id;
+
+  if(contactResult.error){
+    $("status").textContent = "Projects loaded; customer names could not load: " + contactResult.error.message;
+  }
 }
 
 async function loadReport(){
-  const slug = $("projectSelect").value;
-  if(!slug){
-    $("report").innerHTML = `<div class="card"><div class="card-body empty">No Crudobot jobs saved yet.</div></div>`;
-    $("status").textContent = "Create a row in crudobot_jobs first.";
+  const projectId = $("projectSelect").value;
+  if(!projectId){
+    $("report").innerHTML = `<div class="card"><div class="card-body empty">No Crudobot projects saved yet.</div></div>`;
+    $("status").textContent = "No rows found in crudo_projects.";
     return;
   }
 
-  $("status").textContent = "Crudobot is pulling the job together…";
+  $("status").textContent = "Crudobot is pulling the project together…";
   $("robotMessage").textContent = "COUNTING THE DAMAGE";
 
-  const jobResult = await sb.from("crudobot_jobs").select("*").eq("project_slug",slug).single();
-  if(jobResult.error){
-    $("status").textContent = "Job record failed: " + jobResult.error.message;
+  const projectResult = await sb.from("crudo_projects").select("*").eq("id",projectId).single();
+  if(projectResult.error){
+    $("status").textContent = "Project record failed: " + projectResult.error.message;
     return;
   }
-  const job = jobResult.data;
-  const projectName = job.project_name;
-  const questId = job.quest_id || slug;
 
-  const [txResult,itemResult,laborResult,timeResult] = await Promise.all([
-    sb.from("guard_job_transactions").select("*").ilike("project_name",projectName).order("transaction_date"),
-    sb.from("guard_job_items").select("*").ilike("project_name",projectName).order("created_at"),
-    sb.from("obijuan_quest_assignments").select("*").eq("quest_id",questId).order("accepted_at"),
-    sb.from("obijuan_owner_time").select("*").eq("quest_id",questId).order("created_at")
+  const project = projectResult.data;
+  const cached = projectCache.find(p => p.id === projectId);
+  const customerName = cached?.customer_name || "Unknown customer";
+
+  const [materialPlanResult, txResult, itemResult, laborResult] = await Promise.all([
+    sb.from("crudo_project_materials").select("*").eq("project_id",projectId).order("created_at"),
+    sb.from("crudo_material_transactions").select("*").eq("project_id",projectId).order("transaction_date"),
+    sb.from("crudo_material_transaction_items").select("*").eq("project_id",projectId).order("created_at"),
+    sb.from("crudo_labor_entries").select("*").eq("project_id",projectId).order("created_at")
   ]);
 
-  const errors = [txResult.error,itemResult.error,laborResult.error,timeResult.error].filter(Boolean);
-  if(errors.length){
-    $("status").textContent = "Some job-cost sources failed: " + errors.map(e=>e.message).join(" | ");
-  } else {
-    $("status").textContent = "Live report loaded from Crudobot, Guardabot, and ObiJuan.";
-  }
+  const sourceErrors = [
+    materialPlanResult.error, txResult.error, itemResult.error, laborResult.error
+  ].filter(Boolean);
 
+  const materialPlan = materialPlanResult.data || [];
   const transactions = txResult.data || [];
   const items = itemResult.data || [];
   const labor = laborResult.data || [];
-  const ownerTime = timeResult.data || [];
 
-  const actualTransactions = transactions.filter(r =>
-    !["planned","estimate","budget"].includes(String(r.transaction_type||"").toLowerCase())
-  );
-  const plannedTransactions = transactions.filter(r =>
-    ["planned","estimate","budget"].includes(String(r.transaction_type||"").toLowerCase())
-  );
+  // ObiJuan does not currently have project_id. Only query it when a defensible
+  // link exists: quest_id exactly equals this Crudobot project UUID.
+  let questLabor = [];
+  const questResult = await sb.from("obijuan_quest_assignments")
+    .select("*").eq("quest_id",projectId).order("accepted_at");
+  if(!questResult.error) questLabor = questResult.data || [];
 
-  const materialsActual = actualTransactions.reduce((sum,row)=>sum+signedTransaction(row),0);
-  const materialsPlanned = plannedTransactions.reduce((sum,row)=>sum+Math.abs(Number(row.total||0)),0);
-  const subcontractLabor = labor.reduce((sum,row)=>sum+payoutValue(row),0);
-  const otherCosts = Number(job.other_direct_costs || 0);
-  const directCost = materialsActual + subcontractLabor + otherCosts;
-  const projectedCost = directCost + materialsPlanned;
-  const revenue = Number(job.final_invoice || job.original_bid || 0);
-  const grossProfit = revenue - directCost;
-  const projectedProfit = revenue - projectedCost;
-  const margin = revenue ? grossProfit / revenue * 100 : 0;
-  const projectedMargin = revenue ? projectedProfit / revenue * 100 : 0;
-  const ownerTimeLabel = ownerTime.length
-    ? ownerTime.map(r=>`${Number(r.quantity||0).toLocaleString()} ${esc(r.unit||"days")} — ${esc(r.owner_name||"Owner")}`).join("<br>")
-    : "Not recorded";
+  if(sourceErrors.length){
+    $("status").textContent = "Some project-cost sources failed: " + sourceErrors.map(e=>e.message).join(" | ");
+  } else {
+    $("status").textContent = "Live report loaded from Crudobot and Metiche.";
+  }
 
-  $("robotMessage").textContent = grossProfit >= 0 ? "WE STILL MADE MONEY" : "AY, CARNAL…";
+  const purchases = transactions
+    .filter(r => String(r.transaction_type||"").toLowerCase() === "purchase")
+    .reduce((sum,r) => sum + Math.abs(Number(r.total || 0)), 0);
+
+  const returns = transactions
+    .filter(r => String(r.transaction_type||"").toLowerCase() === "return")
+    .reduce((sum,r) => sum + Math.abs(Number(r.total || 0)), 0);
+
+  const materialsActual = purchases - returns;
+  const materialsEstimated = Number(project.estimated_materials || 0) ||
+    materialPlan.reduce((sum,r) => sum + Number(r.estimated_total || 0), 0);
+  const materialVariance = materialsEstimated - materialsActual;
+
+  const laborMinutes = labor.reduce((sum,r) => sum + Number(r.actual_minutes || 0), 0);
+  const subcontractLabor = questLabor.reduce((sum,r) => sum + payoutValue(r), 0);
+
+  // We have actual owner labor TIME, but no labor-rate field in the current schema.
+  // Do not invent a dollar cost for Heaven/Daniel here.
+  const directCashCost = materialsActual + subcontractLabor;
+  const revenue = Number(project.contract_amount || 0);
+  const cashContribution = revenue - directCashCost;
+  const cashMargin = revenue ? cashContribution / revenue * 100 : 0;
+
+  const workerTotals = {};
+  labor.forEach(r => {
+    const worker = r.worker || "Unknown";
+    workerTotals[worker] = (workerTotals[worker] || 0) + Number(r.actual_minutes || 0);
+  });
+
+  const outcomes = {
+    pending: 0, purchased: 0, on_hand: 0, not_needed: 0, unplanned: 0
+  };
+  materialPlan.forEach(r => {
+    const key = String(r.outcome || "pending").toLowerCase();
+    outcomes[key] = (outcomes[key] || 0) + 1;
+  });
+
+  $("robotMessage").textContent = "JOB REALITY";
   $("report").innerHTML = `
     <section class="card">
-      <div class="card-title">${esc(projectName)} · ${esc(job.status || "OPEN")}</div>
+      <div class="card-title">${esc(customerName)} — ${esc(project.project_name)} · ${esc(project.status || "ACTIVE")}</div>
       <div class="card-body hero">
         <div class="metric">
-          <div class="metric-label">Revenue used</div>
+          <div class="metric-label">Contract amount</div>
           <div class="metric-value">${money(revenue)}</div>
         </div>
         <div class="metric">
-          <div class="metric-label">Gross profit</div>
-          <div class="metric-value ${grossProfit >= 0 ? "profit":"loss"}">${money(grossProfit)}</div>
+          <div class="metric-label">Cash contribution</div>
+          <div class="metric-value ${cashContribution >= 0 ? "profit":"loss"}">${money(cashContribution)}</div>
         </div>
         <div class="metric">
-          <div class="metric-label">Gross margin</div>
-          <div class="metric-value ${margin >= 25 ? "profit": margin < 0 ? "loss":""}">${margin.toFixed(1)}%</div>
+          <div class="metric-label">Cash margin*</div>
+          <div class="metric-value ${cashMargin < 0 ? "loss":""}">${cashMargin.toFixed(1)}%</div>
         </div>
         <div class="metric">
-          <div class="metric-label">Direct cost</div>
-          <div class="metric-value">${money(directCost)}</div>
+          <div class="metric-label">Actual labor time</div>
+          <div class="metric-value">${minutesLabel(laborMinutes)}</div>
         </div>
       </div>
-    </section>
-
-    <section class="card">
-      <div class="card-title">REVENUE</div>
-      <div class="card-body">
-        <div class="row"><div class="label">Original bid</div><div class="value">${money(job.original_bid)}</div></div>
-        <div class="row"><div class="label">Final invoice</div><div class="value">${job.final_invoice == null ? "Not saved" : money(job.final_invoice)}</div></div>
-        <div class="row"><div class="label">Payments received</div><div class="value">${job.amount_collected == null ? "Not saved" : money(job.amount_collected)}</div></div>
+      <div class="card-body" style="padding-top:0">
+        <div class="warning">*Cash contribution currently subtracts purchased materials net of returns and linked ObiJuan payouts. Owner labor is tracked as time, not yet converted to dollars because the current project schema does not store a costing rate.</div>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-title">DIRECT JOB COST</div>
+      <div class="card-title">PROJECT BASELINE</div>
       <div class="card-body">
-        <div class="row"><div class="label">Materials — actual</div><div class="value">${money(materialsActual)}</div></div>
-        <div class="row"><div class="label">Quest / subcontract payouts</div><div class="value">${money(subcontractLabor)}</div></div>
-        <div class="row"><div class="label">Other direct costs</div><div class="value">${money(otherCosts)}</div></div>
-        <div class="row total"><div>Total direct cost</div><div class="value">${money(directCost)}</div></div>
-        ${materialsPlanned ? `
-          <div class="warning">
-            Planned but not yet actual: ${money(materialsPlanned)}<br>
-            Projected cost: ${money(projectedCost)} · Projected profit: ${money(projectedProfit)}
-            · Projected margin: ${projectedMargin.toFixed(1)}%
-          </div>` : ""}
+        <div class="row"><div class="label">Contract amount</div><div class="value">${money(project.contract_amount)}</div></div>
+        <div class="row"><div class="label">Estimated materials</div><div class="value">${money(materialsEstimated)}</div></div>
+        <div class="row"><div class="label">Estimated labor</div><div class="value">${project.estimated_labor == null ? "Not saved" : money(project.estimated_labor)}</div></div>
+        <div class="row"><div class="label">Owner</div><div class="value">${esc(project.owner || "Not saved")}</div></div>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-title">OWNER TIME — STORED, NOT COSTED</div>
-      <div class="card-body note">${ownerTimeLabel}</div>
+      <div class="card-title">MATERIAL COST</div>
+      <div class="card-body">
+        <div class="row"><div class="label">Estimated materials</div><div class="value">${money(materialsEstimated)}</div></div>
+        <div class="row"><div class="label">Gross purchases</div><div class="value">${money(purchases)}</div></div>
+        <div class="row"><div class="label">Returns / credits</div><div class="value">${money(-returns)}</div></div>
+        <div class="row total"><div>Net purchased materials</div><div class="value">${money(materialsActual)}</div></div>
+        <div class="row"><div class="label">Purchase savings vs estimate</div><div class="value ${materialVariance >= 0 ? "profit":"loss"}">${money(materialVariance)}</div></div>
+      </div>
     </section>
 
     <section class="card">
-      <div class="card-title">MATERIAL TRANSACTIONS</div>
+      <div class="card-title">ACTUAL LABOR — METICHE</div>
+      <div class="card-body">
+        ${Object.keys(workerTotals).length ? Object.entries(workerTotals).map(([worker,mins]) => `
+          <div class="row">
+            <div class="label">${esc(worker)}</div>
+            <div class="value">${minutesLabel(mins)}</div>
+          </div>`).join("") : `<div class="empty">No crudo_labor_entries saved for this project yet.</div>`}
+        <div class="row total"><div>Total actual labor</div><div class="value">${minutesLabel(laborMinutes)}</div></div>
+        ${labor.length ? `
+        <details class="details">
+          <summary>Show labor entries (${labor.length})</summary>
+          <table class="small-table">
+            <thead><tr><th>Worker / source</th><th>Notes</th><th>Time</th></tr></thead>
+            <tbody>${labor.map(r=>`
+              <tr>
+                <td>${esc(r.worker || "Unknown")}<br><span style="color:#8f7865">${esc(r.source || "")}</span></td>
+                <td>${esc(r.notes || "")}</td>
+                <td>${minutesLabel(r.actual_minutes)}</td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </details>` : ""}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">MATERIAL PLAN / OUTCOMES</div>
+      <div class="card-body">
+        ${materialPlan.length ? `
+          <div class="row"><div class="label">Pending</div><div class="value">${outcomes.pending || 0}</div></div>
+          <div class="row"><div class="label">Purchased</div><div class="value">${outcomes.purchased || 0}</div></div>
+          <div class="row"><div class="label">Already on hand</div><div class="value">${outcomes.on_hand || 0}</div></div>
+          <div class="row"><div class="label">Not needed</div><div class="value">${outcomes.not_needed || 0}</div></div>
+          <div class="row"><div class="label">Unplanned</div><div class="value">${outcomes.unplanned || 0}</div></div>
+          <details class="details">
+            <summary>Show material plan (${materialPlan.length})</summary>
+            <table class="small-table">
+              <thead><tr><th>Material</th><th>Outcome</th><th>Estimate</th></tr></thead>
+              <tbody>${materialPlan.map(r=>`
+                <tr>
+                  <td>${esc(r.item_name)}<br><span style="color:#8f7865">${esc(r.estimated_quantity ?? "")} ${esc(r.estimated_unit || "")}</span></td>
+                  <td>${esc(r.outcome || "pending")}</td>
+                  <td>${money(r.estimated_total)}</td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </details>
+        ` : `<div class="empty">No estimated material lines saved for this project yet.</div>`}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">MATERIAL TRANSACTIONS — CRUDOBOT</div>
       <div class="card-body">
         ${transactions.length ? `
         <table class="small-table">
@@ -296,45 +399,46 @@ async function loadReport(){
           <tbody>${transactions.map(r=>`
             <tr>
               <td>${esc(r.transaction_date || "")}<br>${esc(r.vendor || "Unknown")}</td>
-              <td>${esc(r.transaction_type || "purchase")}</td>
+              <td>${esc(r.transaction_type || "")}</td>
               <td>${money(signedTransaction(r))}</td>
             </tr>`).join("")}
           </tbody>
-        </table>` : `<div class="empty">No Guardabot transactions saved for this project.</div>`}
+        </table>` : `<div class="empty">No Crudobot purchase or return receipts saved for this project yet.</div>`}
         <details class="details">
-          <summary>Show harvested material lines (${items.length})</summary>
+          <summary>Show receipt material lines (${items.length})</summary>
           ${items.length ? `
             <table class="small-table">
               <thead><tr><th>Material</th><th>Qty / Unit</th><th>Total</th></tr></thead>
               <tbody>${items.map(i=>`
                 <tr>
-                  <td>${esc(i.description || "")}${i.sku ? `<br><span style="color:#8f7865">SKU ${esc(i.sku)}</span>`:""}</td>
-                  <td>${esc(i.quantity || 0)} ${esc(i.unit || "")}</td>
-                  <td>${money((String(i.line_type||"").toLowerCase()==="return" ? -1:1)*Number(i.line_total||0))}</td>
+                  <td>${esc(i.item_name || "")}${i.sku ? `<br><span style="color:#8f7865">SKU ${esc(i.sku)}</span>`:""}</td>
+                  <td>${esc(i.quantity ?? 0)} ${esc(i.unit || "")}</td>
+                  <td>${money(i.line_total)}</td>
                 </tr>`).join("")}
               </tbody>
-            </table>` : `<div class="empty">No parsed material lines yet.</div>`}
+            </table>` : `<div class="empty">No parsed receipt lines yet.</div>`}
         </details>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-title">QUEST LABOR</div>
+      <div class="card-title">OBIJUAN QUEST PAYOUTS</div>
       <div class="card-body">
-        ${labor.length ? labor.map(r=>`
+        ${questLabor.length ? questLabor.map(r=>`
           <div class="row">
             <div>
               <div>${esc(r.worker_name || "Worker")}</div>
               <div class="label">${esc(r.status || "accepted")}</div>
             </div>
             <div class="value">${money(payoutValue(r))}</div>
-          </div>`).join("") : `<div class="empty">No ObiJuan quest prices or payouts saved.</div>`}
+          </div>`).join("") :
+          `<div class="empty">No ObiJuan payout is linked to this Crudobot project UUID. ObiJuan currently stores quest_id as text, not project_id, so unrelated quests are not guessed into this report.</div>`}
       </div>
     </section>
 
     <section class="card">
       <div class="card-title">CRUDOBOT NOTES</div>
-      <div class="card-body note">${esc(job.closeout_notes || "No closeout notes saved.")}</div>
+      <div class="card-body note">${esc(project.scope_notes || "No project scope notes saved.")}</div>
     </section>
   `;
 }
