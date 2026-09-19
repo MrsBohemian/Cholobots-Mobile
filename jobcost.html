@@ -97,20 +97,9 @@
     .empty{color:var(--muted);padding:8px 0}
     .foot{margin-top:14px;text-align:center;color:#7e6959;font-size:10px;letter-spacing:.12em}
 
-    .status-pill{
-      display:inline-block;padding:6px 9px;border:2px solid var(--line);
-      background:#2b1a09;color:var(--amber);font-size:11px;font-weight:900;
-      letter-spacing:.08em;text-transform:uppercase;margin-top:7px
-    }
+    .status-pill{display:inline-block;padding:6px 9px;border:2px solid var(--line);background:#2b1a09;color:var(--amber);font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
     .big-number{font-size:28px;font-weight:900;margin-top:4px}
-    .question{
-      border:2px solid var(--line);background:#0c0907;padding:12px;
-      font-size:14px;line-height:1.45;font-weight:900
-    }
-    .checkline{
-      display:grid;grid-template-columns:24px 1fr;gap:8px;
-      padding:8px 0;border-bottom:1px dashed #5d4635;align-items:start
-    }
+    .checkline{display:grid;grid-template-columns:24px 1fr;gap:8px;padding:8px 0;border-bottom:1px dashed #5d4635;align-items:start}
     .checkline:last-child{border-bottom:0}
     .check{font-size:17px}
     .subtle{color:var(--muted);font-size:11px;line-height:1.4;margin-top:4px}
@@ -128,7 +117,7 @@
     <a class="back" href="index.html">←</a>
     <div class="title-wrap">
       <div class="eyebrow">CHOLOBOTS FINANCIAL INTELLIGENCE</div>
-      <h1>CRUDOBOT JOB CLOSEOUT</h1>
+      <h1>CRUDOBOT JOB REALITY</h1>
     </div>
     <button class="refresh" onclick="loadReport()">↻</button>
   </div>
@@ -148,7 +137,7 @@
   <div id="status" class="status">Connecting to Supabase…</div>
 
   <div id="report" class="report"></div>
-  <div class="foot">WHAT CAME IN · WHAT IT COST · WHAT IS LEFT · WHAT HAPPENS NEXT</div>
+  <div class="foot">MONEY · WORK · CLOSEOUT</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -225,22 +214,32 @@ async function loadReport(){
   const projectId = $("projectSelect").value;
   if(!projectId){
     $("report").innerHTML = `<div class="card"><div class="card-body empty">No Crudobot projects saved yet.</div></div>`;
-    $("status").textContent = "No rows found in crudo_projects.";
+    $("status").textContent = "No project selected.";
     return;
   }
 
-  $("status").textContent = "Crudobot is pulling the project together…";
-  $("robotMessage").textContent = "WHAT DID THIS JOB DO?";
+  $("status").textContent = "Loading job reality…";
+  $("robotMessage").textContent = "COUNTING THE JOB";
 
   const projectResult = await sb.from("crudo_projects").select("*").eq("id",projectId).single();
   if(projectResult.error){
-    $("status").textContent = "Project record failed: " + projectResult.error.message;
+    $("status").textContent = "Project failed: " + projectResult.error.message;
     return;
   }
-
   const project = projectResult.data;
-  const cached = projectCache.find(p => p.id === projectId);
-  const customerName = cached?.customer_name || "Unknown customer";
+
+  // Resolve this project's customer directly instead of depending only on the selector cache.
+  let customerName = projectCache.find(p => p.id === projectId)?.customer_name || "";
+  if(!customerName || customerName === "Unknown customer"){
+    const contactResult = await sb.from("chisme_contacts")
+      .select("id,name,first_name,last_name,company,next_action,next_followup_date,chisme_summary")
+      .eq("id",project.contact_id).maybeSingle();
+    if(!contactResult.error && contactResult.data){
+      const c = contactResult.data;
+      customerName = c.name || [c.first_name,c.last_name].filter(Boolean).join(" ") || c.company || "Customer";
+    }
+  }
+  if(!customerName || customerName === "Unknown customer") customerName = "Customer";
 
   const [txResult, laborResult, taskResult] = await Promise.all([
     sb.from("crudo_material_transactions").select("*").eq("project_id",projectId).order("transaction_date"),
@@ -248,10 +247,10 @@ async function loadReport(){
     sb.from("crudo_project_tasks").select("*").eq("project_id",projectId).order("created_at")
   ]);
 
-  const sourceErrors = [txResult.error,laborResult.error,taskResult.error].filter(Boolean);
   const transactions = txResult.data || [];
   const labor = laborResult.data || [];
   const tasks = taskResult.data || [];
+  const sourceErrors = [txResult.error,laborResult.error,taskResult.error].filter(Boolean);
 
   let questLabor = [];
   const questResult = await sb.from("obijuan_quest_assignments")
@@ -264,41 +263,67 @@ async function loadReport(){
   const returns = transactions
     .filter(r => String(r.transaction_type||"").toLowerCase() === "return")
     .reduce((sum,r) => sum + Math.abs(Number(r.total || 0)), 0);
-  const netMaterials = purchases - returns;
+  const materials = purchases - returns;
   const subcontractors = questLabor.reduce((sum,r) => sum + payoutValue(r), 0);
-  const directCashCost = netMaterials + subcontractors;
+  const directCost = materials + subcontractors;
 
-  const contractAmount = Number(project.contract_amount || 0);
-  const invoiceAmount = project.invoice_amount == null ? contractAmount : Number(project.invoice_amount || 0);
+  const contract = Number(project.contract_amount || 0);
+  const invoice = project.invoice_amount == null ? 0 : Number(project.invoice_amount || 0);
   const received = Number(project.amount_collected || 0);
-  const owed = Math.max(0, invoiceAmount - received);
-  const cashRemaining = received - directCashCost;
+  const amountExpected = invoice || contract;
+  const owed = amountExpected > 0 ? Math.max(0, amountExpected - received) : 0;
+  const cashRemaining = received - directCost;
 
-  const laborMinutes = labor.reduce((sum,r) => sum + Number(r.actual_minutes || 0), 0);
+  const totalMinutes = labor.reduce((sum,r) => sum + Number(r.actual_minutes || 0), 0);
+
+  // Roll Metiche labor up to the punch-list task it belongs to.
+  const taskMinutes = new Map();
+  let unassignedMinutes = 0;
+  labor.forEach(entry => {
+    const mins = Number(entry.actual_minutes || 0);
+    if(entry.task_id){
+      taskMinutes.set(String(entry.task_id), (taskMinutes.get(String(entry.task_id)) || 0) + mins);
+    } else {
+      unassignedMinutes += mins;
+    }
+  });
+
+  const taskLabel = t =>
+    t.task_name || t.name || t.title || t.description || t.task || t.item || "Punch-list item";
+
+  const taskDone = t => String(t.status || "").toLowerCase() === "completed";
+  const doneCount = tasks.filter(taskDone).length;
+  const workComplete = tasks.length > 0 && doneCount === tasks.length;
+
   const workerTotals = {};
   labor.forEach(r => {
     const worker = r.worker || "Unknown";
     workerTotals[worker] = (workerTotals[worker] || 0) + Number(r.actual_minutes || 0);
   });
 
-  const doneTasks = tasks.filter(t => String(t.status||"").toLowerCase() === "completed").length;
-  const workComplete = tasks.length > 0 && doneTasks === tasks.length;
   const invoiceSent = !!project.invoice_sent_at;
-  const paymentComplete = invoiceAmount > 0 && received >= invoiceAmount;
+  const paymentComplete = amountExpected > 0 ? received >= amountExpected : received > 0;
   const customerFollowup = !!project.customer_followup_at;
 
   let displayStatus = "ACTIVE";
   if(String(project.status||"").toLowerCase() === "completed") displayStatus = "CLOSED";
-  else if(project.closeout_status && project.closeout_status !== "open") displayStatus = String(project.closeout_status).replaceAll("_"," ").toUpperCase();
+  else if(project.closeout_status && project.closeout_status !== "open")
+    displayStatus = String(project.closeout_status).replaceAll("_"," ").toUpperCase();
   else if(workComplete) displayStatus = "READY FOR CLOSEOUT";
 
-  const overheadKnown = false; // Financial Engine will supply this later.
+  // Only show contract/invoice boxes when they actually add information.
+  const extraMoney = [];
+  if(contract > 0) extraMoney.push(`<div class="row"><div class="label">Agreed price</div><div class="value">${money(contract)}</div></div>`);
+  if(invoice > 0) extraMoney.push(`<div class="row"><div class="label">Invoiced</div><div class="value">${money(invoice)}</div></div>`);
+  if(owed > 0) extraMoney.push(`<div class="row"><div class="label">Still owed</div><div class="value loss">${money(owed)}</div></div>`);
 
-  const futureNote = project.customer_followup_notes || "";
-  const closeoutNote = project.closeout_notes || "";
+  const missing = [];
+  if(materials === 0) missing.push("No material purchases/returns are recorded for this project.");
+  if(totalMinutes === 0) missing.push("No Metiche labor time is recorded for this project.");
+  if(received > 0 && amountExpected === 0) missing.push("Money was received, but no agreed price or invoice amount is saved.");
 
   $("status").textContent = sourceErrors.length
-    ? "Some project sources failed: " + sourceErrors.map(e=>e.message).join(" | ")
+    ? "Some project data could not load: " + sourceErrors.map(e=>e.message).join(" | ")
     : "Live project closeout loaded.";
 
   $("robotMessage").textContent = "JOB REALITY";
@@ -311,76 +336,84 @@ async function loadReport(){
     </section>
 
     <section class="card">
-      <div class="card-title">RECEIVED / OWED</div>
-      <div class="card-body hero">
-        <div class="metric">
-          <div class="metric-label">Contract / agreed price</div>
-          <div class="metric-value">${money(contractAmount)}</div>
+      <div class="card-title">MONEY</div>
+      <div class="card-body">
+        <div class="hero">
+          <div class="metric">
+            <div class="metric-label">Received</div>
+            <div class="big-number ${received > 0 ? "profit":""}">${money(received)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Direct cash cost</div>
+            <div class="big-number">${money(directCost)}</div>
+          </div>
         </div>
-        <div class="metric">
-          <div class="metric-label">Received</div>
-          <div class="metric-value ${received > 0 ? "profit":""}">${money(received)}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Still owed</div>
-          <div class="metric-value ${owed > 0 ? "loss":""}">${money(owed)}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Invoice amount</div>
-          <div class="metric-value">${money(invoiceAmount)}</div>
-        </div>
+        <div class="row total"><div>Remaining after direct job costs</div><div class="value ${cashRemaining >= 0 ? "profit":"loss"}">${money(cashRemaining)}</div></div>
+        ${extraMoney.join("")}
+        <div class="subtle">This is the job itself: money received minus purchased materials, returns, and linked subcontractor payouts. Owner labor is shown separately as actual time.</div>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-title">WHAT THE JOB COST IN CASH</div>
+      <div class="card-title">WHAT THIS JOB PRODUCED</div>
       <div class="card-body">
-        <div class="row"><div class="label">Materials purchased, net of returns</div><div class="value">${money(netMaterials)}</div></div>
-        <div class="row"><div class="label">Subcontractors / ObiJuan</div><div class="value">${money(subcontractors)}</div></div>
-        <div class="row total"><div>Direct cash cost</div><div class="value">${money(directCashCost)}</div></div>
-        <div class="row total"><div>Cash remaining from money received</div><div class="value ${cashRemaining >= 0 ? "profit":"loss"}">${money(cashRemaining)}</div></div>
-        <div class="warning">Owner labor is shown as time below, not silently converted to a dollar cost.</div>
+        <div class="row"><div class="label">Money in</div><div class="value">${money(received)}</div></div>
+        <div class="row"><div class="label">Money spent directly on this job</div><div class="value">-${money(directCost)}</div></div>
+        <div class="row total"><div>Left to pay for our time + help support the business</div><div class="value ${cashRemaining >= 0 ? "profit":"loss"}">${money(cashRemaining)}</div></div>
+        <div class="subtle">Crudobot stops here. The company-level financial view can later compare results like this across all jobs against Handley Man's overhead.</div>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-title">TIME USED</div>
+      <div class="card-title">WORK BREAKDOWN — ${minutesLabel(totalMinutes)} TOTAL</div>
       <div class="card-body">
-        ${Object.keys(workerTotals).length ? Object.entries(workerTotals).map(([worker,mins]) => `
-          <div class="row"><div class="label">${esc(worker)}</div><div class="value">${minutesLabel(mins)}</div></div>
-        `).join("") : `<div class="empty">No Metiche labor time captured for this project.</div>`}
-        <div class="row total"><div>Total owner / crew time captured</div><div class="value">${minutesLabel(laborMinutes)}</div></div>
+        ${tasks.length ? tasks.map(t => {
+          const mins = taskMinutes.get(String(t.id)) || 0;
+          return `<div class="row">
+            <div>
+              <div>${taskDone(t) ? "✅" : "⬜"} ${esc(taskLabel(t))}</div>
+            </div>
+            <div class="value">${mins ? minutesLabel(mins) : "—"}</div>
+          </div>`;
+        }).join("") : `<div class="empty">No punch-list items saved for this project.</div>`}
+        ${unassignedMinutes ? `<div class="row"><div class="label">Project time not tied to a punch-list item</div><div class="value">${minutesLabel(unassignedMinutes)}</div></div>` : ""}
+        <div class="row total"><div>Total captured time</div><div class="value">${minutesLabel(totalMinutes)}</div></div>
+        ${Object.keys(workerTotals).length > 1 ? `
+          <details class="details">
+            <summary>Time by person</summary>
+            ${Object.entries(workerTotals).map(([worker,mins]) =>
+              `<div class="row"><div class="label">${esc(worker)}</div><div class="value">${minutesLabel(mins)}</div></div>`
+            ).join("")}
+          </details>` : ""}
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-title">OVERHEAD CONTRIBUTION</div>
-      <div class="card-body">
-        <div class="question">
-          Did this job leave enough cash to carry its share of Handley Man overhead?
-          <div class="subtle">${overheadKnown ? "" : "Not calculated yet. The Financial Engine still needs an overhead allocation rule. Crudobot will not invent one."}</div>
-        </div>
-        <div class="row"><div class="label">Cash available after direct cash costs</div><div class="value">${money(cashRemaining)}</div></div>
-        <div class="row"><div class="label">Required overhead contribution</div><div class="value">TBD</div></div>
-      </div>
-    </section>
+
 
     <section class="card">
       <div class="card-title">CLOSEOUT</div>
       <div class="card-body">
-        <div class="checkline"><div class="check">${workComplete ? "✅":"⬜"}</div><div>Work complete<div class="subtle">${doneTasks}/${tasks.length} punch-list items complete</div></div></div>
-        <div class="checkline"><div class="check">${invoiceSent ? "✅":"⬜"}</div><div>Invoice sent${project.invoice_sent_at ? `<div class="subtle">${esc(new Date(project.invoice_sent_at).toLocaleString())}</div>`:""}</div></div>
-        <div class="checkline"><div class="check">${paymentComplete ? "✅":"⬜"}</div><div>Payment collected<div class="subtle">${money(received)} received · ${money(owed)} still owed</div></div></div>
+        <div class="checkline"><div class="check">${workComplete ? "✅":"⬜"}</div><div>Work complete<div class="subtle">${doneCount}/${tasks.length} punch-list items complete</div></div></div>
+        <div class="checkline"><div class="check">${invoiceSent ? "✅":"⬜"}</div><div>Invoice sent</div></div>
+        <div class="checkline"><div class="check">${paymentComplete ? "✅":"⬜"}</div><div>Payment collected<div class="subtle">${money(received)} received${owed > 0 ? ` · ${money(owed)} still owed` : ""}</div></div></div>
         <div class="checkline"><div class="check">${customerFollowup ? "✅":"⬜"}</div><div>Customer follow-up${project.customer_followup_notes ? `<div class="subtle">${esc(project.customer_followup_notes)}</div>`:""}</div></div>
       </div>
     </section>
 
-    ${(futureNote || closeoutNote) ? `
+    ${missing.length ? `
+    <section class="card">
+      <div class="card-title">MISSING FROM THIS JOB</div>
+      <div class="card-body">
+        ${missing.map(x => `<div class="checkline"><div class="check">⚠️</div><div>${esc(x)}</div></div>`).join("")}
+      </div>
+    </section>` : ""}
+
+    ${(project.customer_followup_notes || project.closeout_notes) ? `
     <section class="card">
       <div class="card-title">WHAT'S NEXT</div>
       <div class="card-body note">
-        ${futureNote ? `<div>${esc(futureNote)}</div>`:""}
-        ${closeoutNote ? `<div class="subtle" style="margin-top:8px">${esc(closeoutNote)}</div>`:""}
+        ${project.customer_followup_notes ? `<div>${esc(project.customer_followup_notes)}</div>`:""}
+        ${project.closeout_notes ? `<div class="subtle" style="margin-top:8px">${esc(project.closeout_notes)}</div>`:""}
       </div>
     </section>` : ""}
 
@@ -390,31 +423,24 @@ async function loadReport(){
         <div class="row"><div class="label">Gross material purchases</div><div class="value">${money(purchases)}</div></div>
         <div class="row"><div class="label">Returns / credits</div><div class="value">${money(-returns)}</div></div>
         <div class="row"><div class="label">Material transactions</div><div class="value">${transactions.length}</div></div>
-        <div class="row"><div class="label">Labor entries</div><div class="value">${labor.length}</div></div>
+        <div class="row"><div class="label">Metiche labor entries</div><div class="value">${labor.length}</div></div>
         <div class="row"><div class="label">ObiJuan payouts</div><div class="value">${questLabor.length}</div></div>
-        ${transactions.length ? `
-          <details class="details">
-            <summary>Material transactions</summary>
-            <table class="small-table">
-              <thead><tr><th>Date / Vendor</th><th>Type</th><th>Total</th></tr></thead>
-              <tbody>${transactions.map(r=>`
-                <tr><td>${esc(r.transaction_date || "")}<br>${esc(r.vendor || "Manual / unknown")}</td>
-                <td>${esc(r.transaction_type || "")}</td><td>${money(signedTransaction(r))}</td></tr>
-              `).join("")}</tbody>
-            </table>
-          </details>` : ""}
         ${labor.length ? `
           <details class="details">
-            <summary>Labor entries</summary>
-            <table class="small-table">
-              <thead><tr><th>Worker / source</th><th>Notes</th><th>Time</th></tr></thead>
-              <tbody>${labor.map(r=>`
-                <tr><td>${esc(r.worker || "Unknown")}<br><span class="subtle">${esc(r.source || "")}</span></td>
-                <td>${esc(r.notes || "")}</td><td>${minutesLabel(r.actual_minutes)}</td></tr>
-              `).join("")}</tbody>
-            </table>
+            <summary>Raw labor entries</summary>
+            ${labor.map(r => `<div class="row">
+              <div><div>${esc(r.worker || "Unknown")}</div><div class="subtle">${esc(r.notes || r.source || "")}</div></div>
+              <div class="value">${minutesLabel(r.actual_minutes)}</div>
+            </div>`).join("")}
           </details>` : ""}
-        ${project.scope_notes ? `<div class="note" style="margin-top:12px">${esc(project.scope_notes)}</div>`:""}
+        ${transactions.length ? `
+          <details class="details">
+            <summary>Raw material transactions</summary>
+            ${transactions.map(r => `<div class="row">
+              <div><div>${esc(r.vendor || "Manual / unknown")}</div><div class="subtle">${esc(r.transaction_date || "")} · ${esc(r.transaction_type || "")}</div></div>
+              <div class="value">${money(signedTransaction(r))}</div>
+            </div>`).join("")}
+          </details>` : ""}
       </div>
     </details>
   `;
