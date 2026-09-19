@@ -243,8 +243,10 @@ async function loadReport(){
 
   const [txResult, laborResult, taskResult] = await Promise.all([
     sb.from("crudo_material_transactions").select("*").eq("project_id",projectId).order("transaction_date"),
+    // Raw Metiche observations stay available in SHOW THE GUTS, but they are
+    // no longer the authoritative source for finalized project labor time.
     sb.from("crudo_labor_entries").select("*").eq("project_id",projectId).order("created_at"),
-    sb.from("crudo_project_tasks").select("*").eq("project_id",projectId).order("created_at")
+    sb.from("crudo_project_tasks").select("*").eq("project_id",projectId).order("task_order").order("created_at")
   ]);
 
   const transactions = txResult.data || [];
@@ -274,32 +276,16 @@ async function loadReport(){
   const owed = amountExpected > 0 ? Math.max(0, amountExpected - received) : 0;
   const cashRemaining = received - directCost;
 
-  const totalMinutes = labor.reduce((sum,r) => sum + Number(r.actual_minutes || 0), 0);
+  // Crudobot's finalized task times are the job-costing source of truth.
+  // Metiche labor entries remain raw observations/history only.
+  const totalMinutes = tasks.reduce((sum,t) => sum + Number(t.actual_minutes || 0), 0);
+  const timedTaskCount = tasks.filter(t => t.actual_minutes != null).length;
 
-  // Roll Metiche labor up to the punch-list task it belongs to.
-  const taskMinutes = new Map();
-  let unassignedMinutes = 0;
-  labor.forEach(entry => {
-    const mins = Number(entry.actual_minutes || 0);
-    if(entry.task_id){
-      taskMinutes.set(String(entry.task_id), (taskMinutes.get(String(entry.task_id)) || 0) + mins);
-    } else {
-      unassignedMinutes += mins;
-    }
-  });
-
-  const taskLabel = t =>
-    t.task_name || t.name || t.title || t.description || t.task || t.item || "Punch-list item";
+  const taskLabel = t => t.task_name || "Punch-list item";
 
   const taskDone = t => String(t.status || "").toLowerCase() === "completed";
   const doneCount = tasks.filter(taskDone).length;
   const workComplete = tasks.length > 0 && doneCount === tasks.length;
-
-  const workerTotals = {};
-  labor.forEach(r => {
-    const worker = r.worker || "Unknown";
-    workerTotals[worker] = (workerTotals[worker] || 0) + Number(r.actual_minutes || 0);
-  });
 
   const invoiceSent = !!project.invoice_sent_at;
   const paymentComplete = amountExpected > 0 ? received >= amountExpected : received > 0;
@@ -319,7 +305,8 @@ async function loadReport(){
 
   const missing = [];
   if(materials === 0) missing.push("No material purchases/returns are recorded for this project.");
-  if(totalMinutes === 0) missing.push("No Metiche labor time is recorded for this project.");
+  if(totalMinutes === 0) missing.push("No finalized task time is recorded for this project.");
+  else if(timedTaskCount < tasks.length) missing.push(`${tasks.length - timedTaskCount} punch-list item(s) still need a finalized time.`);
   if(received > 0 && amountExpected === 0) missing.push("Money was received, but no agreed price or invoice amount is saved.");
 
   $("status").textContent = sourceErrors.length
@@ -368,23 +355,16 @@ async function loadReport(){
       <div class="card-title">WORK BREAKDOWN — ${minutesLabel(totalMinutes)} TOTAL</div>
       <div class="card-body">
         ${tasks.length ? tasks.map(t => {
-          const mins = taskMinutes.get(String(t.id)) || 0;
+          const hasTime = t.actual_minutes != null;
+          const mins = Number(t.actual_minutes || 0);
           return `<div class="row">
             <div>
               <div>${taskDone(t) ? "✅" : "⬜"} ${esc(taskLabel(t))}</div>
             </div>
-            <div class="value">${mins ? minutesLabel(mins) : "—"}</div>
+            <div class="value">${hasTime ? minutesLabel(mins) : "—"}</div>
           </div>`;
         }).join("") : `<div class="empty">No punch-list items saved for this project.</div>`}
-        ${unassignedMinutes ? `<div class="row"><div class="label">Project time not tied to a punch-list item</div><div class="value">${minutesLabel(unassignedMinutes)}</div></div>` : ""}
-        <div class="row total"><div>Total captured time</div><div class="value">${minutesLabel(totalMinutes)}</div></div>
-        ${Object.keys(workerTotals).length > 1 ? `
-          <details class="details">
-            <summary>Time by person</summary>
-            ${Object.entries(workerTotals).map(([worker,mins]) =>
-              `<div class="row"><div class="label">${esc(worker)}</div><div class="value">${minutesLabel(mins)}</div></div>`
-            ).join("")}
-          </details>` : ""}
+        <div class="row total"><div>Total actual task time</div><div class="value">${minutesLabel(totalMinutes)}</div></div>
       </div>
     </section>
 
@@ -423,11 +403,12 @@ async function loadReport(){
         <div class="row"><div class="label">Gross material purchases</div><div class="value">${money(purchases)}</div></div>
         <div class="row"><div class="label">Returns / credits</div><div class="value">${money(-returns)}</div></div>
         <div class="row"><div class="label">Material transactions</div><div class="value">${transactions.length}</div></div>
-        <div class="row"><div class="label">Metiche labor entries</div><div class="value">${labor.length}</div></div>
+        <div class="row"><div class="label">Tasks with finalized time</div><div class="value">${timedTaskCount}/${tasks.length}</div></div>
+        <div class="row"><div class="label">Raw Metiche observations</div><div class="value">${labor.length}</div></div>
         <div class="row"><div class="label">ObiJuan payouts</div><div class="value">${questLabor.length}</div></div>
         ${labor.length ? `
           <details class="details">
-            <summary>Raw labor entries</summary>
+            <summary>Raw Metiche labor observations</summary>
             ${labor.map(r => `<div class="row">
               <div><div>${esc(r.worker || "Unknown")}</div><div class="subtle">${esc(r.notes || r.source || "")}</div></div>
               <div class="value">${minutesLabel(r.actual_minutes)}</div>
